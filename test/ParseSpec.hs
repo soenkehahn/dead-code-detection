@@ -3,6 +3,7 @@
 module ParseSpec where
 
 import           Control.Exception
+import           Control.Monad
 import           Data.String.Interpolate
 import           Data.String.Interpolate.Util
 import           Outputable
@@ -20,7 +21,7 @@ spec = do
           foo = 3 -- bar
         |]
         ast <- parse "Foo.hs"
-        showAst ast `shouldBe` "foo = 3"
+        fmap showAst ast `shouldBe` Right "foo = 3"
 
     it "handles an invalid module gracefully" $ do
       inTempDirectory $ do
@@ -28,7 +29,8 @@ spec = do
           module Foo where
           foo = bar
         |]
-        parse "Foo.hs" `shouldThrow` (== ErrorCall "not in scope: bar")
+        result <- parse "Foo.hs"
+        void result `shouldBe` Left "Foo.hs:2:7: Not in scope: ‘bar’\n"
 
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr
