@@ -1,0 +1,20 @@
+{-# language QuasiQuotes #-}
+
+module GraphSpec where
+
+import           Data.String.Interpolate
+import           Test.Hspec
+
+import           Graph
+import           Parse
+import           ParseSpec
+
+spec = do
+  describe "deadNames" $ do
+    it "detects unused top-level names" $ do
+      withFoo [i|
+        foo = ()
+        bar = ()
+      |] $ do
+        Right ast <- parse "Foo.hs"
+        deadNames (nameUsageGraph ast) "Foo.foo" `shouldBe` ["Foo.bar"]

@@ -6,6 +6,7 @@ executables:
     dependencies:
       - ghc-paths
       - uniplate
+      - graph-wrapper
 
 tests:
   spec:

@@ -12,6 +12,7 @@ executable find-dead-code
   build-depends:
       ghc-paths
     , uniplate
+    , graph-wrapper
   default-language: Haskell2010
 
 test-suite spec
@@ -25,6 +26,8 @@ test-suite spec
     , mockery
     , interpolate
   other-modules:
+      GraphSpec
       ParseSpec
+      Graph
       Parse
   default-language: Haskell2010
