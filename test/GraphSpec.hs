@@ -8,8 +8,8 @@ import           Test.Hspec
 import           Graph
 import           Helper
 import           Parse
-import           ParseSpec
 
+spec :: Spec
 spec = do
   describe "deadNames" $ do
     it "detects unused top-level names" $ do

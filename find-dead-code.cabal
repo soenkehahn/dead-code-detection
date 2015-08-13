@@ -9,6 +9,7 @@ cabal-version:  >= 1.10
 
 executable find-dead-code
   main-is: Main.hs
+  ghc-options: -Wall -fno-warn-name-shadowing
   build-depends:
       ghc-paths
     , uniplate
@@ -21,12 +22,14 @@ test-suite spec
   hs-source-dirs:
       test
     , src
+  ghc-options: -Wall -fno-warn-name-shadowing
   build-depends:
       hspec
     , mockery
     , interpolate
   other-modules:
       GraphSpec
+      Helper
       ParseSpec
       Graph
       Parse

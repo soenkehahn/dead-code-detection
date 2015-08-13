@@ -1,5 +1,7 @@
 name: find-dead-code
 
+ghc-options: -Wall -fno-warn-name-shadowing
+
 executables:
   find-dead-code:
     main: Main.hs

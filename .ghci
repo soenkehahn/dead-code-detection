@@ -1,1 +1,1 @@
-:set -itest -isrc -package ghc
+:set -itest -isrc -package ghc -Wall -fno-warn-name-shadowing

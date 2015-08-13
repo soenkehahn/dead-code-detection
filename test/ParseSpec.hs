@@ -2,14 +2,11 @@
 
 module ParseSpec where
 
-import           Control.Exception
 import           Control.Monad
 import           Data.List
 import           Data.String.Interpolate
-import           Data.String.Interpolate.Util
 import           Outputable
 import           Test.Hspec
-import           Test.Mockery.Directory
 
 import           Helper
 import           Parse
@@ -17,6 +14,7 @@ import           Parse
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr
 
+spec :: Spec
 spec = do
   describe "parse" $ do
     it "parses a simple module" $ do

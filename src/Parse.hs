@@ -7,12 +7,11 @@ module Parse where
 import           Bag
 import           BasicTypes
 import           Control.Arrow
-import           Data.Data
+import           Control.Monad
 import           Data.Generics.Uniplate.Data
 import           ErrUtils
 import           GHC
 import           GHC.Paths (libdir)
-import           HsBinds
 import           HscTypes
 import           Outputable
 
@@ -20,7 +19,7 @@ parse :: FilePath -> IO (Either String Ast)
 parse file =
   handleSourceError (return . Left . showSourceError) $
   runGhc (Just libdir) $ do
-    getSessionDynFlags >>= setSessionDynFlags
+    getSessionDynFlags >>= void . setSessionDynFlags
     guessTarget file Nothing >>= setTargets . pure
     [mod] <- depanal [] False
     renamed <- tm_renamed_source <$> (parseModule mod >>= typecheckModule)
@@ -63,7 +62,7 @@ instance NUG Ast where
 
 instance NUG (HsValBinds Name) where
   nug = \ case
-    ValBindsOut a b ->
+    ValBindsOut a _b ->
       nug a
       -- fixme: ++ nug b
 
