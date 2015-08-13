@@ -11,18 +11,11 @@ import           Outputable
 import           Test.Hspec
 import           Test.Mockery.Directory
 
+import           Helper
 import           Parse
 
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr
-
-withFoo :: String -> IO () -> IO ()
-withFoo code action = do
-  inTempDirectory $ do
-    writeFile "Foo.hs" $
-      "module Foo where\n" ++
-      unindent code
-    action
 
 spec = do
   describe "parse" $ do

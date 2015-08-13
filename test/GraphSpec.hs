@@ -6,6 +6,7 @@ import           Data.String.Interpolate
 import           Test.Hspec
 
 import           Graph
+import           Helper
 import           Parse
 import           ParseSpec
 
