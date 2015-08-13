@@ -17,5 +17,5 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
-        Right ast <- parse "Foo.hs"
+        Right ast <- parse ["Foo.hs"]
         deadNames (nameUsageGraph ast) "Foo.foo" `shouldBe` ["Foo.bar"]

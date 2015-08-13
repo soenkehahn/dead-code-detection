@@ -20,3 +20,5 @@ tests:
       - hspec
       - mockery
       - interpolate
+      - base-compat
+      - silently

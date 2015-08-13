@@ -27,10 +27,14 @@ test-suite spec
       hspec
     , mockery
     , interpolate
+    , base-compat
+    , silently
   other-modules:
       GraphSpec
       Helper
       ParseSpec
+      RunSpec
       Graph
       Parse
+      Run
   default-language: Haskell2010

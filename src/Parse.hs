@@ -14,22 +14,32 @@ import           GHC
 import           GHC.Paths (libdir)
 import           HscTypes
 import           Outputable
+import           System.IO
+import           System.IO.Silently
 
-parse :: FilePath -> IO (Either String Ast)
-parse file =
+parse :: [FilePath] -> IO (Either String Ast)
+parse files =
   handleSourceError (return . Left . showSourceError) $
+  hSilence [stdout, stderr] $
   runGhc (Just libdir) $ do
     getSessionDynFlags >>= void . setSessionDynFlags
-    guessTarget file Nothing >>= setTargets . pure
-    [mod] <- depanal [] False
-    renamed <- tm_renamed_source <$> (parseModule mod >>= typecheckModule)
+    targets <- forM files $ \ file -> guessTarget file Nothing
+    setTargets targets
+    modSummaries <- depanal [] False
+    _ <- load LoadAllTargets
+    let isModuleFromFile m = case ml_hs_file $ ms_location m of
+          Nothing -> error ("parse: module without file")
+          Just file -> file `elem` files
+        mods = filter isModuleFromFile modSummaries
+    renamed <- forM mods $ \ mod ->
+      (tm_renamed_source <$> (parseModule mod >>= typecheckModule))
     Right <$>
-      maybe (error "fixme") (\ (a, _, _, _) -> return a) renamed
+      mapM (maybe (error "fixme") (\ (a, _, _, _) -> return a)) renamed
 
 showSourceError :: SourceError -> String
 showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages
 
-type Ast = HsGroup Name
+type Ast = [HsGroup Name]
 
 showName :: Name -> String
 showName name =
@@ -56,7 +66,7 @@ instance (NUG a, NUG b) => NUG (a, b) where
 instance NUG a => NUG (Bag a) where
   nug = nug . bagToList
 
-instance NUG Ast where
+instance NUG (HsGroup Name) where
   nug = nug . hs_valds
   -- fixme: other fields
 
