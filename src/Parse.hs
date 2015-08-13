@@ -33,7 +33,11 @@ showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorM
 type Ast = HsGroup Name
 
 showName :: Name -> String
-showName = showSDocUnsafe . ppr
+showName name =
+  (showSDocUnsafe $ ppr $ nameModule name) ++ "." ++
+  (showSDocUnsafe $ ppr name)
+
+-- * name usage graph
 
 nameUsageGraph :: NUG ast => ast -> [(String, [String])]
 nameUsageGraph = map (first showName . second (map showName)) . nug
@@ -70,6 +74,8 @@ instance NUG (HsBindLR Name Name) where
   nug = \ case
     FunBind id _ matches _ _ _ ->
       [(unLoc id, usedNames matches)]
+
+-- * extracting used names
 
 class UN ast where
   usedNames :: ast -> [Name]

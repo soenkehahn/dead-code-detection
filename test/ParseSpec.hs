@@ -40,10 +40,7 @@ spec = do
         bar = ()
       |] $ do
         Right graph <- parse "Foo.hs"
-        sort (nameUsageGraph graph) `shouldBe` sort [("foo", ["bar"]), ("bar", ["()"])]
-
-    it "returns qualified names" $ do
-      pending
+        sort (nameUsageGraph graph) `shouldBe` sort [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
 
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr
