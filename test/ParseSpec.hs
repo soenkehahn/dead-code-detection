@@ -13,34 +13,32 @@ import           Test.Mockery.Directory
 
 import           Parse
 
+withFoo :: String -> IO () -> IO ()
+withFoo code action = do
+  inTempDirectory $ do
+    writeFile "Foo.hs" $
+      "module Foo where\n" ++
+      unindent code
+    action
+
 spec = do
   describe "parse" $ do
     it "parses a simple module" $ do
-      inTempDirectory $ do
-        writeFile "Foo.hs" $ unindent [i|
-          module Foo where
-          foo = 3 -- bar
-        |]
+      withFoo "foo = 3 -- bar" $ do
         ast <- parse "Foo.hs"
         fmap showAst ast `shouldBe` Right "foo = 3"
 
     it "handles an invalid module gracefully" $ do
-      inTempDirectory $ do
-        writeFile "Foo.hs" $ unindent [i|
-          module Foo where
-          foo = bar
-        |]
+      withFoo "foo = bar" $ do
         result <- parse "Foo.hs"
         void result `shouldBe` Left "Foo.hs:2:7: Not in scope: ‘bar’\n"
 
   describe "nameUsageGraph" $ do
     it "returns the graph of identifier usage" $ do
-      inTempDirectory $ do
-        writeFile "Foo.hs" $ unindent [i|
-          module Foo where
-          foo = bar
-          bar = ()
-        |]
+      withFoo [i|
+        foo = bar
+        bar = ()
+      |] $ do
         Right graph <- parse "Foo.hs"
         sort (nameUsageGraph graph) `shouldBe` sort [("foo", ["bar"]), ("bar", ["()"])]
 
