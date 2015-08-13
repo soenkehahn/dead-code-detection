@@ -13,6 +13,9 @@ import           Test.Mockery.Directory
 
 import           Parse
 
+showAst :: Ast -> String
+showAst = showSDocUnsafe . ppr
+
 withFoo :: String -> IO () -> IO ()
 withFoo code action = do
   inTempDirectory $ do
@@ -41,6 +44,3 @@ spec = do
       |] $ do
         Right graph <- parse "Foo.hs"
         sort (nameUsageGraph graph) `shouldBe` sort [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
-
-showAst :: Ast -> String
-showAst = showSDocUnsafe . ppr

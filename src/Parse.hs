@@ -45,6 +45,18 @@ nameUsageGraph = map (first showName . second (map showName)) . nug
 class NUG ast where
   nug :: ast -> [(Name, [Name])]
 
+instance NUG a => NUG (Located a) where
+  nug = nug . unLoc
+
+instance NUG a => NUG [a] where
+  nug = concatMap nug
+
+instance (NUG a, NUG b) => NUG (a, b) where
+  nug (a, b) = nug a ++ nug b
+
+instance NUG a => NUG (Bag a) where
+  nug = nug . bagToList
+
 instance NUG Ast where
   nug = nug . hs_valds
   -- fixme: other fields
@@ -58,18 +70,6 @@ instance NUG (HsValBinds Name) where
 instance NUG RecFlag where
   nug _ = []
 
-instance NUG a => NUG [a] where
-  nug = concatMap nug
-
-instance (NUG a, NUG b) => NUG (a, b) where
-  nug (a, b) = nug a ++ nug b
-
-instance NUG a => NUG (Bag a) where
-  nug = nug . bagToList
-
-instance NUG a => NUG (Located a) where
-  nug = nug . unLoc
-
 instance NUG (HsBindLR Name Name) where
   nug = \ case
     FunBind id _ matches _ _ _ ->
@@ -80,14 +80,14 @@ instance NUG (HsBindLR Name Name) where
 class UN ast where
   usedNames :: ast -> [Name]
 
-instance UN (MatchGroup Name (LHsExpr Name)) where
-  usedNames = usedNames . mg_alts
+instance UN a => UN (Located a) where
+  usedNames = usedNames . unLoc
 
 instance UN a => UN [a] where
   usedNames = concatMap usedNames
 
-instance UN a => UN (Located a) where
-  usedNames = usedNames . unLoc
+instance UN (MatchGroup Name (LHsExpr Name)) where
+  usedNames = usedNames . mg_alts
 
 instance UN (Match Name (LHsExpr Name)) where
   usedNames = usedNames . m_grhss
