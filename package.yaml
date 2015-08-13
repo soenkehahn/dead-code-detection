@@ -5,6 +5,7 @@ executables:
     main: Main.hs
     dependencies:
       - ghc-paths
+      - uniplate
 
 tests:
   spec:
