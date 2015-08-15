@@ -3,13 +3,13 @@
 module ParseSpec where
 
 import           Control.Monad
-import           Data.List
 import           Data.String.Interpolate
 import           Outputable
 import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
 
+import           Graph
 import           Helper
 import           Parse
 
@@ -45,8 +45,8 @@ spec = do
             bar = foo
           |])
       withModules [a, b] $ do
-        ast <- parse ["B.hs"]
-        fmap nameUsageGraph ast `shouldBe` Right [("B.bar", ["A.foo"])]
+        parseStringGraph ["B.hs"] `shouldReturn`
+          Graph [("B.bar", ["A.foo"])]
 
     it "can be used to parse multiple files" $ do
       let a = ("A", [i|
@@ -58,9 +58,8 @@ spec = do
             bar = bar
           |])
       withModules [a, b] $ do
-        ast <- parse ["A.hs", "B.hs"]
-        fmap nameUsageGraph ast `shouldBe`
-          Right [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
+        parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
+          Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
 
   describe "nameUsageGraph" $ do
     it "returns the graph of identifier usage" $ do
@@ -68,6 +67,5 @@ spec = do
         foo = bar
         bar = ()
       |] $ do
-        Right ast <- parse ["Foo.hs"]
-        sort (nameUsageGraph ast) `shouldBe`
-          sort [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
+        parseStringGraph ["Foo.hs"] `shouldReturn`
+          Graph [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]

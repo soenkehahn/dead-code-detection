@@ -1,14 +1,21 @@
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Graph where
 
-import           Data.Graph.Wrapper
+import qualified Data.Graph.Wrapper as Wrapper
 import           Data.List
 
-deadNames :: [(String, [String])] -> String -> [String]
-deadNames (fromListLenient . map (\ (a, b) -> (a, a, b)) -> graph) root =
-  let reachable = reachableVertices graph root 
-      allTopLevelDecls = vertices graph
+newtype Graph a = Graph [(a, [a])]
+  deriving (Show, Functor)
+
+instance (Ord a) => Eq (Graph a) where
+  Graph a == Graph b = sort a == sort b
+
+deadNames :: Graph String -> String -> [String]
+deadNames (Graph (Wrapper.fromListLenient . map (\ (a, b) -> (a, a, b)) -> graph)) root =
+  let reachable = Wrapper.reachableVertices graph root
+      allTopLevelDecls = Wrapper.vertices graph
   in allTopLevelDecls \\ reachable
 
 -- fixme: use Sets?

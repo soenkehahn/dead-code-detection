@@ -2,7 +2,12 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Parse where
+module Parse (
+  Ast,
+  showName,
+  parse,
+  nameUsageGraph,
+  ) where
 
 import           Bag
 import           BasicTypes
@@ -13,9 +18,12 @@ import           ErrUtils
 import           GHC
 import           GHC.Paths (libdir)
 import           HscTypes
+import           Name
 import           Outputable
 import           System.IO
 import           System.IO.Silently
+
+import           Graph
 
 parse :: [FilePath] -> IO (Either String Ast)
 parse files =
@@ -43,13 +51,16 @@ type Ast = [HsGroup Name]
 
 showName :: Name -> String
 showName name =
-  (showSDocUnsafe $ ppr $ nameModule name) ++ "." ++
-  (showSDocUnsafe $ ppr name)
+  mod ++ "." ++ id
+  where
+    mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
+      nameModule_maybe name
+    id = showSDocUnsafe $ ppr name
 
 -- * name usage graph
 
-nameUsageGraph :: NUG ast => ast -> [(String, [String])]
-nameUsageGraph = map (first showName . second (map showName)) . nug
+nameUsageGraph :: NUG ast => ast -> Graph Name
+nameUsageGraph = Graph . nug
 
 class NUG ast where
   nug :: ast -> [(Name, [Name])]

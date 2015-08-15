@@ -7,7 +7,6 @@ import           Test.Hspec
 
 import           Graph
 import           Helper
-import           Parse
 
 spec :: Spec
 spec = do
@@ -17,5 +16,5 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
-        Right ast <- parse ["Foo.hs"]
-        deadNames (nameUsageGraph ast) "Foo.foo" `shouldBe` ["Foo.bar"]
+        graph <- parseStringGraph ["Foo.hs"]
+        deadNames graph "Foo.foo" `shouldBe` ["Foo.bar"]
