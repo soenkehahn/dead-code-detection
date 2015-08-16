@@ -16,6 +16,7 @@ executables:
       - ghc-paths
       - uniplate
       - graph-wrapper
+      - string-conversions
 
 tests:
   spec:

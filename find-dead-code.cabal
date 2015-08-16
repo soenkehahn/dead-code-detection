@@ -19,7 +19,9 @@ executable find-dead-code
     , ghc-paths
     , uniplate
     , graph-wrapper
+    , string-conversions
   other-modules:
+      GHC.Show
       Graph
       Parse
       Run
@@ -43,6 +45,7 @@ test-suite spec
       Helper
       ParseSpec
       RunSpec
+      GHC.Show
       Graph
       Main
       Parse

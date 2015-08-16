@@ -5,6 +5,7 @@ import           Control.Monad
 import           System.Environment
 import           System.Exit
 
+import           GHC.Show
 import           Graph
 import           Parse
 
@@ -18,5 +19,5 @@ deadNamesFromFiles :: [FilePath] -> String -> IO [String]
 deadNamesFromFiles files root = do
   parsed <- parse files
   case parsed of
-    Right ast -> return $ fmap showName $ deadNames (nameUsageGraph ast) root
+    Right ast -> return $ fmap formatName $ deadNames (nameUsageGraph ast) root
     Left err -> die err

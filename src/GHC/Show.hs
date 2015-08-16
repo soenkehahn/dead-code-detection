@@ -2,7 +2,9 @@
 
 module GHC.Show where
 
+import           Data.String.Conversions
 import           ErrUtils
+import           FastString
 import           GHC
 import           HscTypes
 import           Name
@@ -10,9 +12,13 @@ import           Outputable
 
 formatName :: Name -> String
 formatName name =
-  file ++ ": " ++ showName name
+  srcLocS ++ ": " ++ showName name
   where
-    file = showSrcLoc $ nameSrcLoc name
+    srcLocS = case nameSrcLoc name of
+      RealSrcLoc loc ->
+        cs (fs_bs (srcLocFile loc)) ++ ":" ++
+        show (srcLocLine loc) ++ ":" ++
+        show (srcLocCol loc)
 
 showName :: Name -> String
 showName name = mod ++ "." ++ id
@@ -20,10 +26,6 @@ showName name = mod ++ "." ++ id
     mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
       nameModule_maybe name
     id = showSDocUnsafe $ ppr name
-
-showSrcLoc :: SrcLoc -> String
-showSrcLoc = \ case
-  RealSrcLoc srcLoc -> show $ srcLocFile srcLoc
 
 showSourceError :: SourceError -> String
 showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages

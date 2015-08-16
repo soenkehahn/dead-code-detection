@@ -22,7 +22,7 @@ spec = do
           |])
       withModules [main] $ do
         output <- capture_ $ withArgs ["Main.hs"] run
-        output `shouldBe` "Main.unused\n"
+        output `shouldBe` "Main.hs:4:1: Main.unused\n"
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do
@@ -36,7 +36,18 @@ spec = do
           |])
       withModules [a, b] $ do
         deadNamesFromFiles ["A.hs", "B.hs"] "A.foo"
-          `shouldReturn` ["B.bar"]
+          `shouldReturn` ["B.hs:2:1: B.bar"]
 
     it "includes source locations" $ do
-      pending
+      let a = ("A", [i|
+            module A where
+            foo = ()
+          |])
+          b = ("B", [i|
+            module B where
+            bar = ()
+          |])
+      withModules [a, b] $ do
+        deadNamesFromFiles ["A.hs", "B.hs"] "A.foo"
+          `shouldReturn` ["B.hs:2:1: B.bar"]
+-- fixme: don't show module names?
