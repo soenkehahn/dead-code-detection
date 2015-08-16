@@ -11,18 +11,15 @@ module Parse (
 
 import           Bag
 import           BasicTypes
-import           Control.Arrow
 import           Control.Monad
 import           Data.Generics.Uniplate.Data
-import           ErrUtils
 import           GHC
 import           GHC.Paths (libdir)
-import           HscTypes
-import           Name
 import           Outputable
 import           System.IO
 import           System.IO.Silently
 
+import           GHC.Show
 import           Graph
 
 parse :: [FilePath] -> IO (Either String Ast)
@@ -44,18 +41,7 @@ parse files =
     Right <$>
       mapM (maybe (error "fixme") (\ (a, _, _, _) -> return a)) renamed
 
-showSourceError :: SourceError -> String
-showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages
-
 type Ast = [HsGroup Name]
-
-showName :: Name -> String
-showName name =
-  mod ++ "." ++ id
-  where
-    mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
-      nameModule_maybe name
-    id = showSDocUnsafe $ ppr name
 
 -- * name usage graph
 
