@@ -18,5 +18,6 @@ spec = do
         touch "somewhere/src/Bar.lhs"
         touch "somewhere/assets/baz.png"
         touch "other/Foo.hs"
-        findHaskellFiles ["somewhere", "other"] `shouldReturn`
+        actual <- findHaskellFiles ["somewhere", "other"]
+        actual `shouldMatchList`
           ["somewhere/src/Foo.hs", "somewhere/Main.hs", "somewhere/src/Bar.lhs", "other/Foo.hs"]
