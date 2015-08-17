@@ -15,8 +15,8 @@ import           Parse
 
 data Options
   = Options {
-    sourceDirs :: [FilePath]
---    root :: [String]
+    sourceDirs :: [FilePath],
+    root :: String
   }
   deriving (Show, GHC.Generics.Generic)
 
@@ -30,7 +30,7 @@ run = do
   --  UseForPositionalArguments "root" "ROOT" :
     []
   files <- findHaskellFiles (sourceDirs options)
-  deadNames <- deadNamesFromFiles files (mkModuleName "Main")
+  deadNames <- deadNamesFromFiles files (mkModuleName (root options))
   forM_ deadNames putStrLn
 
 deadNamesFromFiles :: [FilePath] -> ModuleName -> IO [String]

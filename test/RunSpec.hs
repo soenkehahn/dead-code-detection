@@ -22,7 +22,7 @@ spec = do
             unused = ()
           |])
       withModules [main] $ do
-        output <- capture_ $ withArgs (words "-i.") run
+        output <- capture_ $ withArgs (words "-i. --root Main") run
         output `shouldBe` "./Main.hs:4:1: Main.unused\n"
 
   describe "deadNamesFromFiles" $ do
