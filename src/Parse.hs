@@ -26,7 +26,8 @@ parse files =
   handleSourceError (return . Left . showSourceError) $
   hSilence [stdout, stderr] $
   runGhc (Just libdir) $ do
-    getSessionDynFlags >>= void . setSessionDynFlags
+    dynFlags <- getSessionDynFlags
+    void $ setSessionDynFlags (dynFlags { ghcLink = NoLink })
     targets <- forM files $ \ file -> guessTarget file Nothing
     setTargets targets
     modSummaries <- depanal [] False
