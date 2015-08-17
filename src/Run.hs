@@ -1,17 +1,34 @@
+{-# LANGUAGE DeriveGeneric #-}
 
 module Run where
 
 import           Control.Monad
-import           System.Environment
+import qualified GHC.Generics
+import           System.Console.GetOpt.Generics
 import           System.Exit
 
+import           Files
 import           GHC.Show
 import           Graph
 import           Parse
 
+data Options
+  = Options {
+    sourceDirs :: [FilePath]
+--    root :: [String]
+  }
+  deriving (Show, GHC.Generics.Generic)
+
+instance Generic Options
+instance HasDatatypeInfo Options
+
 run :: IO ()
 run = do
-  files <- getArgs
+  options <- modifiedGetArguments $
+    AddShortOption "sourceDirs" 'i' :
+  --  UseForPositionalArguments "root" "ROOT" :
+    []
+  files <- findHaskellFiles (sourceDirs options)
   deadNames <- deadNamesFromFiles files "Main.main"
   forM_ deadNames putStrLn
 

@@ -20,7 +20,10 @@ executable find-dead-code
     , uniplate
     , graph-wrapper
     , string-conversions
+    , getopt-generics
+    , Glob
   other-modules:
+      Files
       GHC.Show
       Graph
       Parse
@@ -41,10 +44,12 @@ test-suite spec
     , mockery
     , interpolate
   other-modules:
+      FilesSpec
       GraphSpec
       Helper
       ParseSpec
       RunSpec
+      Files
       GHC.Show
       Graph
       Main

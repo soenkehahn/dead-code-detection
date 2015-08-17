@@ -17,6 +17,8 @@ executables:
       - uniplate
       - graph-wrapper
       - string-conversions
+      - getopt-generics
+      - Glob
 
 tests:
   spec:

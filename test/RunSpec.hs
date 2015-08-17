@@ -21,8 +21,8 @@ spec = do
             unused = ()
           |])
       withModules [main] $ do
-        output <- capture_ $ withArgs ["Main.hs"] run
-        output `shouldBe` "Main.hs:4:1: Main.unused\n"
+        output <- capture_ $ withArgs ["-i."] run
+        output `shouldBe` "./Main.hs:4:1: Main.unused\n"
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do
