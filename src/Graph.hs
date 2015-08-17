@@ -5,6 +5,7 @@ module Graph where
 
 import qualified Data.Graph.Wrapper as Wrapper
 import           Data.List
+import qualified Data.Set as Set
 import           Name
 
 import           GHC.Show
@@ -21,17 +22,14 @@ toWrapperGraph (Graph g) = Wrapper.fromListLenient $
 
 deadNames :: Graph Name -> [Name] -> [Name]
 deadNames (toWrapperGraph -> graph) roots =
-  nub $ sort $
-  foldl1 intersect $ map (deadNamesSingle graph) roots
-  -- fixme: foldl1 is not total
+  Set.toList $ case map (deadNamesSingle graph) roots of
+    (x : xs) -> foldl Set.intersection x xs
 
-deadNamesSingle :: Wrapper.Graph Name () -> Name -> [Name]
+deadNamesSingle :: Wrapper.Graph Name () -> Name -> Set.Set Name
 deadNamesSingle graph root =
-  let reachable = Wrapper.reachableVertices graph root
-      allTopLevelDecls = Wrapper.vertices graph
-  in allTopLevelDecls \\ reachable
-
--- fixme: use Sets?
+  let reachable = Set.fromList $ Wrapper.reachableVertices graph root
+      allTopLevelDecls = Set.fromList $ Wrapper.vertices graph
+  in allTopLevelDecls Set.\\ reachable
 
 findName :: Graph Name -> String -> Either String Name
 findName graph s = case filter ((== s) . showName) (Wrapper.vertices $ toWrapperGraph graph) of
