@@ -5,20 +5,20 @@ ghc-options: -Wall -fno-warn-name-shadowing
 dependencies:
   - base == 4.*
   - silently
+  - getopt-generics
+  - ghc
+  - Glob
+  - string-conversions
+  - graph-wrapper
+  - containers
+  - uniplate
+  - ghc-paths
 
 executables:
   find-dead-code:
     main: Main.hs
     source-dirs:
       - src
-    dependencies:
-      - ghc
-      - ghc-paths
-      - uniplate
-      - graph-wrapper
-      - string-conversions
-      - getopt-generics
-      - Glob
 
 tests:
   spec:
@@ -30,3 +30,4 @@ tests:
       - hspec
       - mockery
       - interpolate
+      - filepath

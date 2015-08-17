@@ -15,13 +15,14 @@ executable find-dead-code
   build-depends:
       base == 4.*
     , silently
-    , ghc
-    , ghc-paths
-    , uniplate
-    , graph-wrapper
-    , string-conversions
     , getopt-generics
+    , ghc
     , Glob
+    , string-conversions
+    , graph-wrapper
+    , containers
+    , uniplate
+    , ghc-paths
   other-modules:
       Files
       GHC.Show
@@ -40,9 +41,18 @@ test-suite spec
   build-depends:
       base == 4.*
     , silently
+    , getopt-generics
+    , ghc
+    , Glob
+    , string-conversions
+    , graph-wrapper
+    , containers
+    , uniplate
+    , ghc-paths
     , hspec
     , mockery
     , interpolate
+    , filepath
   other-modules:
       FilesSpec
       GraphSpec
