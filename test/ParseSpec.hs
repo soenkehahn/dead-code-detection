@@ -4,11 +4,13 @@ module ParseSpec where
 
 import           Control.Monad
 import           Data.String.Interpolate
+import           GHC
 import           Outputable
 import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
 
+import           GHC.Show
 import           Graph
 import           Helper
 import           Parse
@@ -22,7 +24,7 @@ spec = do
     it "parses a simple module" $ do
       withFoo "foo = 3 -- bar" $ do
         ast <- parse ["Foo.hs"]
-        fmap showAst ast `shouldBe` Right "[foo = 3]"
+        fmap showAst ast `shouldBe` Right "[Module Foo Nothing [foo = 3]]"
 
     it "handles an invalid module gracefully" $ do
       withFoo "foo = bar" $ do
@@ -60,6 +62,30 @@ spec = do
       withModules [a, b] $ do
         parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
           Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
+
+  describe "findExports" $ do
+    let find moduleFile moduleName = do
+          Right ast <- parse [moduleFile]
+          let Right exports = findExports ast moduleName
+          return $ map showName exports
+    it "finds the names exported by a given module" $ do
+      withFoo [i|
+        foo = ()
+        bar = ()
+      |] $ do
+        exports <- find "Foo.hs" (mkModuleName "Foo")
+        exports `shouldMatchList` ["Foo.foo", "Foo.bar"]
+
+    context "when given a module with an export list" $ do
+      it "returns the explicit exports" $ do
+        let a = ("A", [i|
+              module A (foo) where
+              foo = ()
+              bar = ()
+            |])
+        withModules [a] $ do
+          exports <- find "A.hs" (mkModuleName "A")
+          exports `shouldBe` ["A.foo"]
 
   describe "nameUsageGraph" $ do
     it "returns the graph of identifier usage" $ do

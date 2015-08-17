@@ -5,6 +5,7 @@ module GraphSpec where
 import           Data.String.Interpolate
 import           Test.Hspec
 
+import           GHC.Show
 import           Graph
 import           Helper
 import           Parse

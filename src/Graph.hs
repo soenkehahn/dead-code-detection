@@ -16,6 +16,9 @@ newtype Graph a = Graph [(a, [a])]
 instance (Ord a) => Eq (Graph a) where
   Graph a == Graph b = sort a == sort b
 
+sources :: Graph a -> [a]
+sources (Graph tuples) = map fst tuples
+
 toWrapperGraph :: Ord a => Graph a -> Wrapper.Graph a ()
 toWrapperGraph (Graph g) = Wrapper.fromListLenient $
   map (\ (v, outs) -> (v, (), outs)) g
@@ -34,3 +37,4 @@ deadNamesSingle graph root =
 findName :: Graph Name -> String -> Either String Name
 findName graph s = case filter ((== s) . showName) (Wrapper.vertices $ toWrapperGraph graph) of
   [n] -> Right n
+  [] -> Left ("cannot find identifier: " ++ s)

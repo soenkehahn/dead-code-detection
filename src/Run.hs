@@ -3,6 +3,7 @@
 module Run where
 
 import           Control.Monad
+import           GHC
 import qualified GHC.Generics
 import           System.Console.GetOpt.Generics
 import           System.Exit
@@ -29,16 +30,16 @@ run = do
   --  UseForPositionalArguments "root" "ROOT" :
     []
   files <- findHaskellFiles (sourceDirs options)
-  deadNames <- deadNamesFromFiles files "Main.main"
+  deadNames <- deadNamesFromFiles files (mkModuleName "Main")
   forM_ deadNames putStrLn
 
-deadNamesFromFiles :: [FilePath] -> String -> IO [String]
+deadNamesFromFiles :: [FilePath] -> ModuleName -> IO [String]
 deadNamesFromFiles files root = do
-  parsed <- parse files
-  case parsed of
-    Right ast -> do
-      let graph = nameUsageGraph ast
-      case findName graph root of
-        Right rootName ->
-          return $ fmap formatName $ deadNames graph [rootName]
+  ast <- parse files
+  case ast of
     Left err -> die err
+    Right ast -> case findExports ast root of
+      Left err -> die err
+      Right rootExports -> do
+        let graph = nameUsageGraph ast
+        return $ fmap formatName $ deadNames graph rootExports

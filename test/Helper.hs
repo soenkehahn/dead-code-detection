@@ -6,6 +6,7 @@ import           Data.String.Interpolate.Util
 import           System.FilePath
 import           Test.Mockery.Directory
 
+import           GHC.Show
 import           Graph
 import           Parse
 

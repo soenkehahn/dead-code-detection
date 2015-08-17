@@ -3,6 +3,7 @@
 module RunSpec where
 
 import           Data.String.Interpolate
+import           GHC
 import           System.Environment
 import           System.IO.Silently
 import           Test.Hspec
@@ -15,13 +16,13 @@ spec = do
   describe "run" $ do
     it "works" $ do
       let main = ("Main", [i|
-            module Main where
+            module Main (main) where
             main = used
             used = return ()
             unused = ()
           |])
       withModules [main] $ do
-        output <- capture_ $ withArgs ["-i."] run
+        output <- capture_ $ withArgs (words "-i.") run
         output `shouldBe` "./Main.hs:4:1: Main.unused\n"
 
   describe "deadNamesFromFiles" $ do
@@ -35,9 +36,10 @@ spec = do
             bar = ()
           |])
       withModules [a, b] $ do
-        deadNamesFromFiles ["A.hs", "B.hs"] "A.foo"
+        deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
           `shouldReturn` ["B.hs:2:1: B.bar"]
 
+-- fixme: remove
     it "includes source locations" $ do
       let a = ("A", [i|
             module A where
@@ -48,6 +50,21 @@ spec = do
             bar = ()
           |])
       withModules [a, b] $ do
-        deadNamesFromFiles ["A.hs", "B.hs"] "A.foo"
+        deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
           `shouldReturn` ["B.hs:2:1: B.bar"]
 -- fixme: don't show module names?
+
+    it "only considers exported top-level declarations as roots" $ do
+      let a = ("A", [i|
+            module A (foo) where
+            import B
+            foo = ()
+            bar = B.baz
+          |])
+          b = ("B", [i|
+            module B where
+            baz = ()
+          |])
+      withModules [a, b] $ do
+        dead <- deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
+        dead `shouldMatchList` ["A.hs:4:1: A.bar", "B.hs:2:1: B.baz"]
