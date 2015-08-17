@@ -19,5 +19,9 @@ deadNamesFromFiles :: [FilePath] -> String -> IO [String]
 deadNamesFromFiles files root = do
   parsed <- parse files
   case parsed of
-    Right ast -> return $ fmap formatName $ deadNames (nameUsageGraph ast) root
+    Right ast -> do
+      let graph = nameUsageGraph ast
+      case findName graph root of
+        Right rootName ->
+          return $ fmap formatName $ deadNames graph rootName
     Left err -> die err

@@ -29,3 +29,8 @@ showName name = mod ++ "." ++ id
 
 showSourceError :: SourceError -> String
 showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages
+
+-- * development utils
+
+ppe :: Outputable doc => doc -> a
+ppe = error . showSDocUnsafe . ppr

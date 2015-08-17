@@ -17,6 +17,8 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
-        Right graph <- parse ["Foo.hs"]
-        fmap showName (deadNames (nameUsageGraph graph) "Foo.foo")
+        Right ast <- parse ["Foo.hs"]
+        let graph = nameUsageGraph ast
+            Right root = findName graph "Foo.foo"
+        fmap showName (deadNames graph root)
           `shouldBe` ["Foo.bar"]

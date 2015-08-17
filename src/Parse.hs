@@ -15,7 +15,6 @@ import           Control.Monad
 import           Data.Generics.Uniplate.Data
 import           GHC
 import           GHC.Paths (libdir)
-import           Outputable
 import           System.IO
 import           System.IO.Silently
 
@@ -44,6 +43,8 @@ parse files =
 type Ast = [HsGroup Name]
 
 -- * name usage graph
+
+-- fixme: rename things
 
 nameUsageGraph :: NUG ast => ast -> Graph Name
 nameUsageGraph = Graph . nug
@@ -100,8 +101,3 @@ instance UN (Match Name (LHsExpr Name)) where
 
 instance UN (GRHSs Name (LHsExpr Name)) where
   usedNames = universeBi
-
--- * development utils
-
-ppe :: Outputable doc => doc -> a
-ppe = error . showSDocUnsafe . ppr
