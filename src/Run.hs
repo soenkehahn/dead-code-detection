@@ -23,5 +23,5 @@ deadNamesFromFiles files root = do
       let graph = nameUsageGraph ast
       case findName graph root of
         Right rootName ->
-          return $ fmap formatName $ deadNames graph rootName
+          return $ fmap formatName $ deadNames graph [rootName]
     Left err -> die err

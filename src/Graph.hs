@@ -19,8 +19,14 @@ toWrapperGraph :: Ord a => Graph a -> Wrapper.Graph a ()
 toWrapperGraph (Graph g) = Wrapper.fromListLenient $
   map (\ (v, outs) -> (v, (), outs)) g
 
-deadNames :: Graph Name -> Name -> [Name]
-deadNames (toWrapperGraph -> graph) root =
+deadNames :: Graph Name -> [Name] -> [Name]
+deadNames (toWrapperGraph -> graph) roots =
+  nub $ sort $
+  foldl1 intersect $ map (deadNamesSingle graph) roots
+  -- fixme: foldl1 is not total
+
+deadNamesSingle :: Wrapper.Graph Name () -> Name -> [Name]
+deadNamesSingle graph root =
   let reachable = Wrapper.reachableVertices graph root
       allTopLevelDecls = Wrapper.vertices graph
   in allTopLevelDecls \\ reachable
