@@ -12,7 +12,7 @@ import           Outputable
 
 formatName :: Name -> String
 formatName name =
-  srcLocS ++ ": " ++ showName name
+  srcLocS ++ ": " ++ showSDocUnsafe (ppr name)
   where
     srcLocS = case nameSrcLoc name of
       RealSrcLoc loc ->

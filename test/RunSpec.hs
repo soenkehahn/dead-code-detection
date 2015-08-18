@@ -23,7 +23,7 @@ spec = do
           |])
       withModules [main] $ do
         output <- capture_ $ withArgs (words "-i. --root Main") run
-        output `shouldBe` "./Main.hs:4:1: Main.unused\n"
+        output `shouldBe` "./Main.hs:4:1: unused\n"
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do
@@ -37,8 +37,7 @@ spec = do
           |])
       withModules [a, b] $ do
         deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
-          `shouldReturn` ["B.hs:2:1: B.bar"]
--- fixme: don't show module names?
+          `shouldReturn` ["B.hs:2:1: bar"]
 
     it "only considers exported top-level declarations as roots" $ do
       let a = ("A", [i|
@@ -53,4 +52,4 @@ spec = do
           |])
       withModules [a, b] $ do
         dead <- deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
-        dead `shouldMatchList` ["A.hs:4:1: A.bar", "B.hs:2:1: B.baz"]
+        dead `shouldMatchList` ["A.hs:4:1: bar", "B.hs:2:1: baz"]
