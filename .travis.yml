@@ -10,11 +10,13 @@ addons:
     packages:
       - ghc-7.10.1
       - cabal-install-1.22
+      - happy-1.19.5
 
 before_install:
-  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/1.22/bin:$PATH
+  - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/1.22/bin:/opt/happy/1.19.5/bin:$PATH
   - ghc --version
   - cabal --version
+  - happy --version
   - travis_retry cabal update
   - cabal install --enable-tests --only-dep
 
