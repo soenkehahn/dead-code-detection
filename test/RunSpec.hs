@@ -38,20 +38,6 @@ spec = do
       withModules [a, b] $ do
         deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
           `shouldReturn` ["B.hs:2:1: B.bar"]
-
--- fixme: remove
-    it "includes source locations" $ do
-      let a = ("A", [i|
-            module A where
-            foo = ()
-          |])
-          b = ("B", [i|
-            module B where
-            bar = ()
-          |])
-      withModules [a, b] $ do
-        deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
-          `shouldReturn` ["B.hs:2:1: B.bar"]
 -- fixme: don't show module names?
 
     it "only considers exported top-level declarations as roots" $ do

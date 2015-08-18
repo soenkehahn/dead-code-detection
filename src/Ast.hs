@@ -81,8 +81,6 @@ findExports ast name =
     [] -> Left ("cannot find module: " ++ moduleNameString name)
     _ -> Left ("found module multiple times: " ++ moduleNameString name)
 
--- fixme: Parse -> Ast
-
 -- * name usage graph
 
 topLevelNames :: HsGroup Name -> [Name]
