@@ -102,8 +102,8 @@ spec = do
         foo = bar
         bar = ()
       |] $ do
-        parseStringGraph ["Foo.hs"] `shouldReturn`
-          Graph [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
+        Graph g <- parseStringGraph ["Foo.hs"]
+        g `shouldMatchList` [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
 
     it "detects usage in ViewPatterns" $ do
       withFoo [i|
@@ -116,9 +116,16 @@ spec = do
         let Just used = lookup "Foo.bar" g
         used `shouldContain` ["Foo.x"]
 
-    it "returns the graph of identifier usage" $ do
+    it "doesn't return local variables" $ do
       withFooHeader [i|
         foo = let x = x in x
       |] $ do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", [])]
+
+    it "can parse pattern binding" $ do
+      withFooHeader [i|
+        (Just foo) = let x = x in x
+      |] $ do
+        parseStringGraph ["Foo.hs"] `shouldReturn`
+          Graph [("Foo.foo", ["GHC.Base.Just"])]

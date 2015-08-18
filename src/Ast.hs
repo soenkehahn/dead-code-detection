@@ -1,19 +1,21 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
 module Ast (
   Ast,
   findExports,
   parse,
-  usedNames,
+  usedTopLevelNames,
   ) where
 
 import           Control.Arrow ((>>>), second)
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
+import           Data.List
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
@@ -86,12 +88,12 @@ findExports ast name =
 -- * name usage graph
 
 topLevelNames :: HsGroup Name -> [Name]
-topLevelNames = map (fst . usedNamesFromBinding) . universeBi
+topLevelNames = map fst . concatMap usedNamesFromBinding . universeBi
 
-usedNames :: Ast -> Graph Name
-usedNames =
+usedTopLevelNames :: Ast -> Graph Name
+usedTopLevelNames =
   universeBi >>>
-  map usedNamesFromBinding >>>
+  concatMap usedNamesFromBinding >>>
   removeLocalNames >>>
   Graph
   where
@@ -103,10 +105,35 @@ usedNames =
       filter (isTopLevelName . fst) >>>
       map (second (filter isTopLevelName))
 
-usedNamesFromBinding :: HsBindLR Name Name -> (Name, [Name])
-usedNamesFromBinding = \ case
-  FunBind id _ matches _ _ _ ->
-    (unLoc id, extractNames (unLoc id) matches)
+usedNamesFromBinding :: HsBindLR Name Name -> [(Name, [Name])]
+usedNamesFromBinding binding =
+  map (, nub $ usedNames bn binding) bn
+    where
+      bn = boundNames binding
 
-extractNames :: Name -> MatchGroup Name (LHsExpr Name) -> [Name]
-extractNames id = filter (/= id) . universeBi
+class BoundNames ast where
+  boundNames :: ast -> [Name]
+
+instance (BoundNames a) => BoundNames (Located a) where
+  boundNames = boundNames . unLoc
+
+instance (BoundNames a) => BoundNames [a] where
+  boundNames = concatMap boundNames
+
+instance BoundNames (HsBindLR Name Name) where
+  boundNames = \ case
+    FunBind id _ _ _ _ _ -> [unLoc id]
+    PatBind pat _ _ _ _ -> boundNames pat
+
+instance BoundNames (Pat Name) where
+  boundNames = \ case
+    ParPat p -> boundNames p
+    ConPatIn _ p -> boundNames p
+    VarPat p -> [p]
+
+instance BoundNames (HsConPatDetails Name) where
+  boundNames = \ case
+    PrefixCon args -> boundNames args
+
+usedNames :: (Data ast) => [Name] -> ast -> [Name]
+usedNames ids = filter (`notElem` ids) . universeBi
