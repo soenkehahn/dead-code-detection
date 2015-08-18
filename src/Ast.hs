@@ -10,12 +10,14 @@ module Ast (
   usedNames,
   ) where
 
+import           Control.Arrow ((>>>), second)
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
+import           Name
 import           Outputable
 import           System.IO
 import           System.IO.Silently
@@ -87,7 +89,19 @@ topLevelNames :: HsGroup Name -> [Name]
 topLevelNames = map (fst . usedNamesFromBinding) . universeBi
 
 usedNames :: Ast -> Graph Name
-usedNames = Graph . map usedNamesFromBinding . universeBi
+usedNames =
+  universeBi >>>
+  map usedNamesFromBinding >>>
+  removeLocalNames >>>
+  Graph
+  where
+    isTopLevelName :: Name -> Bool
+    isTopLevelName = maybe False (const True) .  nameModule_maybe
+
+    removeLocalNames :: [(Name, [Name])] -> [(Name, [Name])]
+    removeLocalNames =
+      filter (isTopLevelName . fst) >>>
+      map (second (filter isTopLevelName))
 
 usedNamesFromBinding :: HsBindLR Name Name -> (Name, [Name])
 usedNamesFromBinding = \ case

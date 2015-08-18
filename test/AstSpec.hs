@@ -97,7 +97,7 @@ spec = do
           exports <- find "A.hs" (mkModuleName "A")
           exports `shouldBe` ["A.foo"]
 
-  describe "nameUsageGraph" $ do
+  describe "usedNames" $ do
     it "returns the graph of identifier usage" $ do
       withFooHeader [i|
         foo = bar
@@ -116,3 +116,10 @@ spec = do
         Graph g <- parseStringGraph ["Foo.hs"]
         let Just used = lookup "Foo.bar" g
         used `shouldContain` ["Foo.x"]
+
+    it "returns the graph of identifier usage" $ do
+      withFooHeader [i|
+        foo = let x = x in x
+      |] $ do
+        parseStringGraph ["Foo.hs"] `shouldReturn`
+          Graph [("Foo.foo", [])]
