@@ -3,11 +3,13 @@ module Helper where
 
 import           Control.Monad
 import           Data.String.Interpolate.Util
+import           GHC
+import           Name
+import           Outputable
 import           System.Exit
 import           System.FilePath
 import           Test.Mockery.Directory
 
-import           GHC.Show
 import           Graph
 import           Ast
 
@@ -32,3 +34,10 @@ parseStringGraph files = do
   case result of
     Left e -> die e
     Right r -> return $ fmap showName $ usedNames r
+
+showName :: Name -> String
+showName name = mod ++ "." ++ id
+  where
+    mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
+      nameModule_maybe name
+    id = showSDocUnsafe $ ppr name

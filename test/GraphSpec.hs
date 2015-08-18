@@ -6,7 +6,6 @@ import           Data.String.Interpolate
 import           GHC
 import           Test.Hspec
 
-import           GHC.Show
 import           Graph
 import           Helper
 import           Ast

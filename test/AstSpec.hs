@@ -11,7 +11,6 @@ import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
 
-import           GHC.Show
 import           Graph
 import           Helper
 import           Ast

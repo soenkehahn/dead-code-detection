@@ -21,13 +21,6 @@ formatName name =
         show (srcLocCol loc)
       UnhelpfulLoc s -> cs (fs_bs s)
 
-showName :: Name -> String
-showName name = mod ++ "." ++ id
-  where
-    mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
-      nameModule_maybe name
-    id = showSDocUnsafe $ ppr name
-
 showSourceError :: SourceError -> String
 showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages
 
