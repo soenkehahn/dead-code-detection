@@ -6,6 +6,7 @@ import           Control.Monad
 import           Data.String.Interpolate
 import           GHC
 import           Outputable
+import           System.Directory
 import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
@@ -64,7 +65,13 @@ spec = do
           Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
 
     it "does not create any files" $ do
-      pending
+      withFooHeader [i|
+        foo = ()
+        bar = ()
+      |] $ do
+        _ <- parse ["Foo.hs"]
+        files <- getDirectoryContents "."
+        files `shouldMatchList` (words ". .. Foo.hs")
 
   describe "findExports" $ do
     let find moduleFile moduleName = do

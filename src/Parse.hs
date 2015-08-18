@@ -54,7 +54,10 @@ parse files =
   hSilence [stdout, stderr] $
   runGhc (Just libdir) $ do
     dynFlags <- getSessionDynFlags
-    void $ setSessionDynFlags (dynFlags { ghcLink = NoLink })
+    void $ setSessionDynFlags $ dynFlags {
+      hscTarget = HscNothing,
+      ghcLink = NoLink
+    }
     targets <- forM files $ \ file -> guessTarget file Nothing
     setTargets targets
     modSummaries <- depanal [] False

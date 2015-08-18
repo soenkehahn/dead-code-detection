@@ -29,3 +29,4 @@ tests:
       - mockery
       - interpolate
       - filepath
+      - directory

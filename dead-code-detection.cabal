@@ -53,6 +53,7 @@ test-suite spec
     , mockery
     , interpolate
     , filepath
+    , directory
   other-modules:
       FilesSpec
       GraphSpec
