@@ -124,16 +124,19 @@ instance BoundNames (HsBindLR Name Name) where
   boundNames = \ case
     FunBind id _ _ _ _ _ -> [unLoc id]
     PatBind pat _ _ _ _ -> boundNames pat
+    bind -> nyi bind
 
 instance BoundNames (Pat Name) where
   boundNames = \ case
     ParPat p -> boundNames p
     ConPatIn _ p -> boundNames p
     VarPat p -> [p]
+    pat -> nyi pat
 
 instance BoundNames (HsConPatDetails Name) where
   boundNames = \ case
     PrefixCon args -> boundNames args
+    _ -> error "Not yet implemented: HsConPatDetails"
 
 usedNames :: (Data ast) => [Name] -> ast -> [Name]
 usedNames ids = filter (`notElem` ids) . universeBi

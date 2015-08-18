@@ -28,3 +28,6 @@ showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorM
 
 ppe :: Outputable doc => doc -> a
 ppe = error . showSDocUnsafe . ppr
+
+nyi :: Outputable doc => doc -> a
+nyi = error . ("Not yet implemented: " ++) . showSDocUnsafe . ppr
