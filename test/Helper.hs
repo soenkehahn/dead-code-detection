@@ -13,7 +13,11 @@ import           Parse
 
 withFoo :: String -> IO () -> IO ()
 withFoo code =
-  withModules [("Foo", "module Foo where\n" ++ unindent code)]
+  withModules [("Foo", unindent code)]
+
+withFooHeader :: String -> IO () -> IO ()
+withFooHeader code =
+  withFoo ("module Foo where\n" ++ code)
 
 withModules :: [(String, String)] -> IO () -> IO ()
 withModules modules action = do

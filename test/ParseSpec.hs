@@ -22,12 +22,12 @@ spec :: Spec
 spec = do
   describe "parse" $ do
     it "parses a simple module" $ do
-      withFoo "foo = 3 -- bar" $ do
+      withFooHeader "foo = 3 -- bar" $ do
         ast <- parse ["Foo.hs"]
         fmap showAst ast `shouldBe` Right "[Module Foo Nothing [foo = 3]]"
 
     it "handles an invalid module gracefully" $ do
-      withFoo "foo = bar" $ do
+      withFooHeader "foo = bar" $ do
         result <- parse ["Foo.hs"]
         void result `shouldBe` Left "Foo.hs:2:7: Not in scope: ‘bar’\n"
 
@@ -69,7 +69,7 @@ spec = do
           let Right exports = findExports ast moduleName
           return $ map showName exports
     it "finds the names exported by a given module" $ do
-      withFoo [i|
+      withFooHeader [i|
         foo = ()
         bar = ()
       |] $ do
@@ -89,7 +89,7 @@ spec = do
 
   describe "nameUsageGraph" $ do
     it "returns the graph of identifier usage" $ do
-      withFoo [i|
+      withFooHeader [i|
         foo = bar
         bar = ()
       |] $ do
@@ -97,13 +97,12 @@ spec = do
           Graph [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
 
     it "detects usage in ViewPatterns" $ do
-      let foo = ("Foo", [i|
-            {-# LANGUAGE ViewPatterns #-}
-            module Foo where
-            x y = ()
-            bar (x -> y) = ()
-          |])
-      withModules [foo] $ do
+      withFoo [i|
+        {-# LANGUAGE ViewPatterns #-}
+        module Foo where
+        x y = ()
+        bar (x -> y) = ()
+      |] $ do
         Graph g <- parseStringGraph ["Foo.hs"]
         let Just used = lookup "Foo.bar" g
         used `shouldContain` ["Foo.x"]

@@ -3,6 +3,7 @@
 module GraphSpec where
 
 import           Data.String.Interpolate
+import           GHC
 import           Test.Hspec
 
 import           GHC.Show
@@ -15,17 +16,19 @@ spec = do
   describe "deadNames" $ do
     it "detects unused top-level names" $ do
       withFoo [i|
+        module Foo (foo) where
         foo = ()
         bar = ()
       |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = nameUsageGraph ast
-            Right root = findName graph "Foo.foo"
-        fmap showName (deadNames graph [root])
+            Right roots = findExports ast (mkModuleName "Foo")
+        fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.bar"]
 
     it "allows to specify multiple roots" $ do
       withFoo [i|
+        module Foo (r1, r2) where
         r1 = foo
         r2 = bar
         foo = ()
@@ -34,6 +37,6 @@ spec = do
       |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = nameUsageGraph ast
-            Right roots = mapM (findName graph) ["Foo.r1", "Foo.r2"]
+            Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.baz"]

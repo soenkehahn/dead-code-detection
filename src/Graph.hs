@@ -8,8 +8,6 @@ import           Data.List
 import qualified Data.Set as Set
 import           Name
 
-import           GHC.Show
-
 newtype Graph a = Graph [(a, [a])]
   deriving (Show, Functor)
 
@@ -33,8 +31,3 @@ deadNamesSingle graph root =
   let reachable = Set.fromList $ Wrapper.reachableVertices graph root
       allTopLevelDecls = Set.fromList $ Wrapper.vertices graph
   in allTopLevelDecls Set.\\ reachable
-
-findName :: Graph Name -> String -> Either String Name
-findName graph s = case filter ((== s) . showName) (Wrapper.vertices $ toWrapperGraph graph) of
-  [n] -> Right n
-  [] -> Left ("cannot find identifier: " ++ s)
