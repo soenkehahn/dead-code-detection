@@ -46,6 +46,7 @@ toModule m = case tm_renamed_source m of
       (GHC.moduleName $ ms_mod $ pm_mod_summary $ tm_parsed_module m)
       exports
       hsGroup
+  Nothing -> error "tm_renamed_source should point to a renamed source after renaming"
 
 parse :: [FilePath] -> IO (Either String Ast)
 parse files =
@@ -74,6 +75,7 @@ findExports ast name =
     [Module _ (Just exports) _] ->
       return $ concatMap (ieNames . unLoc) exports
     [] -> Left ("cannot find module: " ++ moduleNameString name)
+    _ -> Left ("found module multiple times: " ++ moduleNameString name)
 
 -- fixme: Parse -> Ast
 
@@ -111,9 +113,9 @@ instance NUG (HsGroup Name) where
 
 instance NUG (HsValBinds Name) where
   nug = \ case
-    ValBindsOut a _b ->
-      nug a
-      -- fixme: ++ nug b
+    ValBindsOut binds _signatures ->
+      nug binds
+    ValBindsIn _ _ -> error "ValBindsIn shouldn't exist after renaming"
 
 instance NUG RecFlag where
   nug _ = []

@@ -23,8 +23,9 @@ toWrapperGraph (Graph g) = Wrapper.fromListLenient $
 
 deadNames :: Graph Name -> [Name] -> [Name]
 deadNames (toWrapperGraph -> graph) roots =
-  Set.toList $ case map (deadNamesSingle graph) roots of
-    (x : xs) -> foldl Set.intersection x xs
+  case map (deadNamesSingle graph) roots of
+    (x : xs) -> Set.toList $ foldl Set.intersection x xs
+    [] -> Wrapper.vertices graph
 
 deadNamesSingle :: Wrapper.Graph Name () -> Name -> Set.Set Name
 deadNamesSingle graph root =

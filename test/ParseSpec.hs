@@ -63,6 +63,9 @@ spec = do
         parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
           Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
 
+    it "does not create any files" $ do
+      pending
+
   describe "findExports" $ do
     let find moduleFile moduleName = do
           Right ast <- parse [moduleFile]
