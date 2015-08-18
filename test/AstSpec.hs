@@ -96,7 +96,7 @@ spec = do
           exports <- find "A.hs" (mkModuleName "A")
           exports `shouldBe` ["A.foo"]
 
-  describe "usedNames" $ do
+  describe "usedTopLevelNames" $ do
     it "returns the graph of identifier usage" $ do
       withFooHeader [i|
         foo = bar
@@ -123,16 +123,26 @@ spec = do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", [])]
 
-    it "can parse pattern binding (PatBind)" $ do
+    it "doesn't return bound names for instance methods" $ do
       withFooHeader [i|
-        (Just foo) = let x = x in x
+        data A = A
+        instance Show A where
+          show A = ""
       |] $ do
         parseStringGraph ["Foo.hs"] `shouldReturn`
-          Graph [("Foo.foo", ["GHC.Base.Just"])]
+          Graph []
 
-    it "can parse tuple pattern binding (PatBind)" $ do
-      withFooHeader [i|
-        (a, b) = let x = x in x
-      |] $ do
-        parseStringGraph ["Foo.hs"] `shouldReturn`
-          Graph [("Foo.a", []), ("Foo.b", [])]
+    context "PatBind" $ do
+      it "can parse pattern binding" $ do
+        withFooHeader [i|
+          (Just foo) = let x = x in x
+        |] $ do
+          parseStringGraph ["Foo.hs"] `shouldReturn`
+            Graph [("Foo.foo", ["GHC.Base.Just"])]
+
+      it "can parse tuple pattern binding" $ do
+        withFooHeader [i|
+          (a, b) = let x = x in x
+        |] $ do
+          parseStringGraph ["Foo.hs"] `shouldReturn`
+            Graph [("Foo.a", []), ("Foo.b", [])]

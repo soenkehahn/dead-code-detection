@@ -3,6 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Ast (
   Ast,
@@ -11,6 +12,7 @@ module Ast (
   usedTopLevelNames,
   ) where
 
+import           Bag
 import           Control.Arrow ((>>>), second)
 import           Control.Monad
 import           Data.Data
@@ -106,8 +108,21 @@ class NameGraph ast where
 instance NameGraph a => NameGraph [a] where
   nameGraph = concatMap nameGraph
 
+instance NameGraph a => NameGraph (Bag a) where
+  nameGraph = concatMap nameGraph . bagToList
+
+instance NameGraph a => NameGraph (Located a) where
+  nameGraph = nameGraph . unLoc
+
 instance NameGraph Module where
-  nameGraph m = nameGraph (universeBi m :: [HsBindLR Name Name])
+  nameGraph = nameGraph . moduleDeclarations
+
+instance NameGraph (HsGroup Name) where
+  nameGraph = nameGraph . hs_valds
+
+instance NameGraph (HsValBinds Name) where
+  nameGraph = \ case
+    ValBindsOut (map snd -> binds) _signatures -> nameGraph binds
 
 instance NameGraph (HsBindLR Name Name) where
   nameGraph binding =
