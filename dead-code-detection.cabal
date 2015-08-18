@@ -4,8 +4,20 @@
 
 name:           dead-code-detection
 version:        0.0.0
+synopsis:       detect dead code in haskell projects
+description:    detect dead code in haskell projects
+category:       Development
+homepage:       https://github.com/soenkehahn/dead-code-detection#readme
+bug-reports:    https://github.com/soenkehahn/dead-code-detection/issues
+maintainer:     Sönke Hahn <soenkehahn@gmail.com>
+license:        BSD3
+license-file:   LICENSE
 build-type:     Simple
 cabal-version:  >= 1.10
+
+source-repository head
+  type: git
+  location: https://github.com/soenkehahn/dead-code-detection
 
 executable dead-code-detection
   main-is: Main.hs
@@ -24,10 +36,10 @@ executable dead-code-detection
     , uniplate
     , ghc-paths
   other-modules:
+      Ast
       Files
       GHC.Show
       Graph
-      Parse
       Run
   default-language: Haskell2010
 
@@ -55,15 +67,15 @@ test-suite spec
     , filepath
     , directory
   other-modules:
+      AstSpec
       FilesSpec
       GraphSpec
       Helper
-      ParseSpec
       RunSpec
+      Ast
       Files
       GHC.Show
       Graph
       Main
-      Parse
       Run
   default-language: Haskell2010
