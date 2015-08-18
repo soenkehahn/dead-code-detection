@@ -123,9 +123,16 @@ spec = do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", [])]
 
-    it "can parse pattern binding" $ do
+    it "can parse pattern binding (PatBind)" $ do
       withFooHeader [i|
         (Just foo) = let x = x in x
       |] $ do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", ["GHC.Base.Just"])]
+
+    it "can parse tuple pattern binding (PatBind)" $ do
+      withFooHeader [i|
+        (a, b) = let x = x in x
+      |] $ do
+        parseStringGraph ["Foo.hs"] `shouldReturn`
+          Graph [("Foo.a", []), ("Foo.b", [])]

@@ -131,6 +131,7 @@ instance BoundNames (Pat Name) where
     ParPat p -> boundNames p
     ConPatIn _ p -> boundNames p
     VarPat p -> [p]
+    TuplePat pats _ _ -> boundNames pats
     pat -> nyi pat
 
 instance BoundNames (HsConPatDetails Name) where
