@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeSynonymInstances #-}
@@ -6,12 +7,11 @@ module Parse (
   Ast,
   findExports,
   parse,
-  nameUsageGraph,
+  usedNames,
   ) where
 
-import           Bag
-import           BasicTypes
 import           Control.Monad
+import           Data.Data
 import           Data.Generics.Uniplate.Data
 import qualified GHC
 import           GHC hiding (Module, moduleName)
@@ -31,6 +31,7 @@ data Module
     moduleExports :: Maybe [LIE Name],
     moduleDeclarations :: HsGroup Name
   }
+  deriving (Data)
 
 instance Outputable Module where
   ppr m =
@@ -74,7 +75,7 @@ findExports :: Ast -> ModuleName -> Either String [Name]
 findExports ast name =
   case filter (\ m -> moduleName m == name) ast of
     [Module _ Nothing declarations] ->
-      return $ sources $ nameUsageGraph declarations
+      return $ topLevelNames declarations
     [Module _ (Just exports) _] ->
       return $ concatMap (ieNames . unLoc) exports
     [] -> Left ("cannot find module: " ++ moduleNameString name)
@@ -84,72 +85,16 @@ findExports ast name =
 
 -- * name usage graph
 
--- fixme: rename things
+topLevelNames :: HsGroup Name -> [Name]
+topLevelNames = map (fst . usedNamesFromBinding) . universeBi
 
-nameUsageGraph :: NUG ast => ast -> Graph Name
-nameUsageGraph = Graph . nug
+usedNames :: Ast -> Graph Name
+usedNames = Graph . map usedNamesFromBinding . universeBi
 
-class NUG ast where
-  nug :: ast -> [(Name, [Name])]
+usedNamesFromBinding :: HsBindLR Name Name -> (Name, [Name])
+usedNamesFromBinding = \ case
+  FunBind id _ matches _ _ _ ->
+    (unLoc id, extractNames (unLoc id) matches)
 
-instance NUG a => NUG (Maybe a) where
-  nug = maybe [] nug
-
-instance NUG a => NUG (Located a) where
-  nug = nug . unLoc
-
-instance NUG a => NUG [a] where
-  nug = concatMap nug
-
-instance (NUG a, NUG b) => NUG (a, b) where
-  nug (a, b) = nug a ++ nug b
-
-instance NUG a => NUG (Bag a) where
-  nug = nug . bagToList
-
-instance NUG Module where
-  nug = nug . moduleDeclarations
-
-instance NUG (HsGroup Name) where
-  nug = nug . hs_valds
-  -- fixme: other fields
-
-instance NUG (HsValBinds Name) where
-  nug = \ case
-    ValBindsOut binds _signatures ->
-      nug binds
-    ValBindsIn _ _ -> error "ValBindsIn shouldn't exist after renaming"
-
-instance NUG RecFlag where
-  nug _ = []
-
-instance NUG (IE Name) where
-  nug _ = []
-
-instance NUG (HsBindLR Name Name) where
-  nug = \ case
-    FunBind id _ matches _ _ _ ->
-      [(unLoc id, usedNames matches)]
-
--- * extracting used names
-
-class UN ast where
-  usedNames :: ast -> [Name]
-
-instance UN a => UN (Located a) where
-  usedNames = usedNames . unLoc
-
-instance UN a => UN [a] where
-  usedNames = concatMap usedNames
-
-instance UN (MatchGroup Name (LHsExpr Name)) where
-  usedNames = usedNames . mg_alts
-
-instance UN (Match Name (LHsExpr Name)) where
-  usedNames ast = usedNames (m_pats ast) ++ usedNames (m_grhss ast)
-
-instance UN (GRHSs Name (LHsExpr Name)) where
-  usedNames = universeBi
-
-instance UN (Pat Name) where
-  usedNames = universeBi
+extractNames :: Name -> MatchGroup Name (LHsExpr Name) -> [Name]
+extractNames id = filter (/= id) . universeBi

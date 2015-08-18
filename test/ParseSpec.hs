@@ -62,7 +62,7 @@ spec = do
           |])
       withModules [a, b] $ do
         parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
-          Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])]
+          Graph [("A.foo", []), ("B.bar", [])]
 
     it "does not create any files" $ do
       withFooHeader [i|

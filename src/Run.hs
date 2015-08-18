@@ -41,5 +41,5 @@ deadNamesFromFiles files root = do
     Right ast -> case findExports ast root of
       Left err -> die err
       Right rootExports -> do
-        let graph = nameUsageGraph ast
+        let graph = usedNames ast
         return $ fmap formatName $ deadNames graph rootExports

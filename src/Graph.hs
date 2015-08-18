@@ -14,9 +14,6 @@ newtype Graph a = Graph [(a, [a])]
 instance (Ord a) => Eq (Graph a) where
   Graph a == Graph b = sort a == sort b
 
-sources :: Graph a -> [a]
-sources (Graph tuples) = map fst tuples
-
 toWrapperGraph :: Ord a => Graph a -> Wrapper.Graph a ()
 toWrapperGraph (Graph g) = Wrapper.fromListLenient $
   map (\ (v, outs) -> (v, (), outs)) g

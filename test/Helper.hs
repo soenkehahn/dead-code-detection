@@ -31,4 +31,4 @@ parseStringGraph files = do
   result <- parse files
   case result of
     Left e -> die e
-    Right r -> return $ fmap showName $ nameUsageGraph r
+    Right r -> return $ fmap showName $ usedNames r

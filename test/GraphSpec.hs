@@ -21,7 +21,7 @@ spec = do
         bar = ()
       |] $ do
         Right ast <- parse ["Foo.hs"]
-        let graph = nameUsageGraph ast
+        let graph = usedNames ast
             Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.bar"]
@@ -36,7 +36,7 @@ spec = do
         baz = ()
       |] $ do
         Right ast <- parse ["Foo.hs"]
-        let graph = nameUsageGraph ast
+        let graph = usedNames ast
             Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.baz"]
