@@ -2,12 +2,12 @@
 --
 -- see: https://github.com/sol/hpack
 
-name:           find-dead-code
+name:           dead-code-detection
 version:        0.0.0
 build-type:     Simple
 cabal-version:  >= 1.10
 
-executable find-dead-code
+executable dead-code-detection
   main-is: Main.hs
   hs-source-dirs:
       src
