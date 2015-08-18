@@ -1,6 +1,6 @@
 {-# language QuasiQuotes #-}
 
-module ParseSpec where
+module AstSpec where
 
 import           Control.Monad
 import           Data.String.Interpolate
@@ -14,7 +14,7 @@ import           Test.Hspec
 import           GHC.Show
 import           Graph
 import           Helper
-import           Parse
+import           Ast
 
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr

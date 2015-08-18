@@ -9,7 +9,7 @@ import           Test.Hspec
 import           GHC.Show
 import           Graph
 import           Helper
-import           Parse
+import           Ast
 
 spec :: Spec
 spec = do

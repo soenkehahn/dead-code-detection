@@ -3,7 +3,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Parse (
+module Ast (
   Ast,
   findExports,
   parse,

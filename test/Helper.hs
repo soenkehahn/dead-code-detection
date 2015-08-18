@@ -9,7 +9,7 @@ import           Test.Mockery.Directory
 
 import           GHC.Show
 import           Graph
-import           Parse
+import           Ast
 
 withFoo :: String -> IO () -> IO ()
 withFoo code =

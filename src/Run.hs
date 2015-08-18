@@ -11,7 +11,7 @@ import           System.Exit
 import           Files
 import           GHC.Show
 import           Graph
-import           Parse
+import           Ast
 
 data Options
   = Options {
