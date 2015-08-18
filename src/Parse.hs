@@ -141,7 +141,10 @@ instance UN (MatchGroup Name (LHsExpr Name)) where
   usedNames = usedNames . mg_alts
 
 instance UN (Match Name (LHsExpr Name)) where
-  usedNames = usedNames . m_grhss
+  usedNames ast = usedNames (m_pats ast) ++ usedNames (m_grhss ast)
 
 instance UN (GRHSs Name (LHsExpr Name)) where
+  usedNames = universeBi
+
+instance UN (Pat Name) where
   usedNames = universeBi

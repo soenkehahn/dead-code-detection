@@ -95,3 +95,15 @@ spec = do
       |] $ do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
+
+    it "detects usage in ViewPatterns" $ do
+      let foo = ("Foo", [i|
+            {-# LANGUAGE ViewPatterns #-}
+            module Foo where
+            x y = ()
+            bar (x -> y) = ()
+          |])
+      withModules [foo] $ do
+        Graph g <- parseStringGraph ["Foo.hs"]
+        let Just used = lookup "Foo.bar" g
+        used `shouldContain` ["Foo.x"]

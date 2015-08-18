@@ -3,6 +3,7 @@ module Helper where
 
 import           Control.Monad
 import           Data.String.Interpolate.Util
+import           System.Exit
 import           System.FilePath
 import           Test.Mockery.Directory
 
@@ -25,4 +26,5 @@ parseStringGraph :: [FilePath] -> IO (Graph String)
 parseStringGraph files = do
   result <- parse files
   case result of
+    Left e -> die e
     Right r -> return $ fmap showName $ nameUsageGraph r
