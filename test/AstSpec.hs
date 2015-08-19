@@ -138,6 +138,13 @@ spec = do
           boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
           boundNames `shouldContain` ["Foo.foo"]
 
+      it "does not detect selectors starting with _" $ do
+        withFooHeader [i|
+          data A = A { _foo :: () }
+        |] $ do
+          boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
+          boundNames `shouldNotContain` ["Foo._foo"]
+
     it "doesn't return bound names for instance methods" $ do
       withFooHeader [i|
         instance Show (a -> b) where

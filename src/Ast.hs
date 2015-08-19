@@ -173,7 +173,11 @@ instance BoundNames (TyClGroup Name) where
 
 instance BoundNames (ConDecl Name) where
   boundNames conDecl =
+    filter (not . isHidden) $
     concatMap (map unLoc . cd_fld_names) (universeBi conDecl :: [ConDeclField Name])
+    where
+      isHidden :: Name -> Bool
+      isHidden name = "_" `isPrefixOf` occNameString (getOccName name)
 
 -- | extracts names used in instance declarations
 getClassMethodUsedNames :: Ast -> [Name]
