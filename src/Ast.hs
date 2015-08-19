@@ -120,7 +120,9 @@ instance NameGraph Module where
   nameGraph = nameGraph . moduleDeclarations
 
 instance NameGraph (HsGroup Name) where
-  nameGraph = nameGraph . hs_valds
+  nameGraph group =
+    nameGraph (hs_valds group) ++
+    map (, []) (boundNames (hs_tyclds group))
 
 instance NameGraph (HsValBinds Name) where
   nameGraph = \ case
@@ -163,6 +165,14 @@ instance BoundNames (HsConPatDetails Name) where
   boundNames = \ case
     PrefixCon args -> boundNames args
     _ -> error "Not yet implemented: HsConPatDetails"
+
+instance BoundNames (TyClGroup Name) where
+  boundNames g = boundNames (universeBi g :: [ConDecl Name])
+
+instance BoundNames (ConDecl Name) where
+  boundNames conDecl =
+    map unLoc (con_names conDecl) ++
+    concatMap (map unLoc . cd_fld_names) (universeBi conDecl :: [ConDeclField Name])
 
 -- | extracts names used in instance declarations
 instanceUsedNames :: Ast -> [Name]

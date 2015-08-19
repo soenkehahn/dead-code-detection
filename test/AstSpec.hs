@@ -123,11 +123,25 @@ spec = do
         parseStringGraph ["Foo.hs"] `shouldReturn`
           Graph [("Foo.foo", [])] []
 
+    context "data type declarations" $ do
+      it "does detect defined constructors" $ do
+        withFooHeader [i|
+          data A = A
+        |] $ do
+          parseStringGraph ["Foo.hs"] `shouldReturn`
+            Graph [("Foo.A", [])] []
+
+      it "does detect selectors" $ do
+        withFooHeader [i|
+          data A = A { foo :: () }
+        |] $ do
+          boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
+          boundNames `shouldContain` ["Foo.foo"]
+
     it "doesn't return bound names for instance methods" $ do
       withFooHeader [i|
-        data A = A
-        instance Show A where
-          show A = ""
+        instance Show (a -> b) where
+          show _ = ""
       |] $ do
         (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` []
 
