@@ -1,8 +1,5 @@
 sudo: false
 
-env:
-  - STACK_YAML=stack.yaml
-
 addons:
   apt:
     packages:
@@ -23,5 +20,4 @@ script:
 
 cache:
   directories:
-    - $HOME/.local/bin
     - $HOME/.stack
