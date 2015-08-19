@@ -53,3 +53,16 @@ spec = do
             Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` []
+
+    it "returns dead names in topological order" $ do
+      withFoo [i|
+        module Foo () where
+        b = c
+        a = b
+        c = ()
+      |] $ do
+        Right ast <- parse ["Foo.hs"]
+        let graph = usedTopLevelNames ast
+            Right roots = findExports ast (mkModuleName "Foo")
+        fmap showName (deadNames graph roots)
+          `shouldBe` (words "Foo.a Foo.b Foo.c")
