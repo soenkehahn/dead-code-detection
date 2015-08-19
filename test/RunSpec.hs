@@ -1,10 +1,13 @@
-{-# language QuasiQuotes #-}
+{-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module RunSpec where
 
+import           Control.Exception
 import           Data.String.Interpolate
 import           GHC
 import           System.Environment
+import           System.Exit
 import           System.IO.Silently
 import           Test.Hspec
 
@@ -14,16 +17,23 @@ import           Run
 spec :: Spec
 spec = do
   describe "run" $ do
-    it "works" $ do
+    context "when given a module containing dead code" $ do
       let main = ("Main", [i|
             module Main (main) where
             main = used
             used = return ()
             unused = ()
           |])
-      withModules [main] $ do
-        output <- capture_ $ withArgs (words "-i. --root Main") run
-        output `shouldBe` "./Main.hs:4:1: unused\n"
+          run' = withArgs (words "-i. --root Main") run
+      it "works" $ do
+        withModules [main] $ do
+          output <- capture_ $
+            handle (\ (_ :: SomeException) -> return ()) run'
+          output `shouldBe` "./Main.hs:4:1: unused\n"
+
+      it "exits with a non-zero exit-code" $ do
+        withModules [main] $ do
+          run' `shouldThrow` (== ExitFailure 1)
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do

@@ -31,7 +31,11 @@ run = do
     []
   files <- findHaskellFiles (sourceDirs options)
   deadNames <- deadNamesFromFiles files (mkModuleName (root options))
-  forM_ deadNames putStrLn
+  case deadNames of
+    [] -> return ()
+    _ -> do
+      forM_ deadNames putStrLn
+      exitWith $ ExitFailure 1
 
 deadNamesFromFiles :: [FilePath] -> ModuleName -> IO [String]
 deadNamesFromFiles files root = do
