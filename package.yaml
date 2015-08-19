@@ -1,4 +1,3 @@
-ghc-options: -Wall -fno-warn-name-shadowing
 synopsis: detect dead code in haskell projects
 description: detect dead code in haskell projects
 category: Development
@@ -6,6 +5,8 @@ maintainer: Sönke Hahn <soenkehahn@gmail.com>
 license: BSD3
 
 github: soenkehahn/dead-code-detection
+
+ghc-options: -Wall -fno-warn-name-shadowing
 
 dependencies:
   - base == 4.*

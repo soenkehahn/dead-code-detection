@@ -128,6 +128,7 @@ instance NameGraph (HsGroup Name) where
 instance NameGraph (HsValBinds Name) where
   nameGraph = \ case
     ValBindsOut (map snd -> binds) _signatures -> nameGraph binds
+    ValBindsIn _ _ -> error "ValBindsIn shouldn't exist after renaming"
 
 instance NameGraph (HsBindLR Name Name) where
   nameGraph binding =
