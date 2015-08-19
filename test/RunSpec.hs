@@ -1,13 +1,12 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module RunSpec where
 
-import           Control.Exception
 import           Data.String.Interpolate
 import           GHC
 import           System.Environment
 import           System.Exit
+import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
 
@@ -16,7 +15,7 @@ import           Run
 
 spec :: Spec
 spec = do
-  describe "run" $ do
+  describe "run" $ around_ (hSilence [stdout, stderr]) $ do
     context "when given a module containing dead code" $ do
       let main = ("Main", [i|
             module Main (main) where
@@ -27,13 +26,26 @@ spec = do
           run' = withArgs (words "-i. --root Main") run
       it "works" $ do
         withModules [main] $ do
-          output <- capture_ $
-            handle (\ (_ :: SomeException) -> return ()) run'
+          output <- capture_ $ swallowExceptions run'
           output `shouldBe` "./Main.hs:4:1: unused\n"
 
       it "exits with a non-zero exit-code" $ do
         withModules [main] $ do
           run' `shouldThrow` (== ExitFailure 1)
+
+    it "allows to set multiple roots" $ do
+      let a = ("A", [i|
+            module A (a) where
+            a = ()
+          |])
+          b = ("B", [i|
+            module B (b) where
+            b = ()
+          |])
+      withModules [a, b] $ do
+        output <- hCapture_ [stdout, stderr] $ swallowExceptions $
+          withArgs (words "-i. --root A --root B") run
+        output `shouldBe` ""
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do
@@ -46,7 +58,7 @@ spec = do
             bar = ()
           |])
       withModules [a, b] $ do
-        deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
+        deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"]
           `shouldReturn` ["B.hs:2:1: bar"]
 
     it "only considers exported top-level declarations as roots" $ do
@@ -61,5 +73,5 @@ spec = do
             baz = ()
           |])
       withModules [a, b] $ do
-        dead <- deadNamesFromFiles ["A.hs", "B.hs"] (mkModuleName "A")
+        dead <- deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"]
         dead `shouldMatchList` ["A.hs:4:1: bar", "B.hs:2:1: baz"]

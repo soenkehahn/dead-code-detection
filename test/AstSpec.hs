@@ -82,7 +82,7 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
-        exports <- find "Foo.hs" (mkModuleName "Foo")
+        exports <- find "Foo.hs" [mkModuleName "Foo"]
         exports `shouldMatchList` ["Foo.foo", "Foo.bar"]
 
     context "when given a module with an export list" $ do
@@ -93,7 +93,7 @@ spec = do
               bar = ()
             |])
         withModules [a] $ do
-          exports <- find "A.hs" (mkModuleName "A")
+          exports <- find "A.hs" [mkModuleName "A"]
           exports `shouldBe` ["A.foo"]
 
   describe "usedTopLevelNames" $ do

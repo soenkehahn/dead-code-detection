@@ -22,7 +22,7 @@ spec = do
 -- fixme: refactor this:
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
-            Right roots = findExports ast (mkModuleName "Foo")
+            Right roots = findExports ast [mkModuleName "Foo"]
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.bar"]
 
@@ -37,7 +37,7 @@ spec = do
       |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
-            Right roots = findExports ast (mkModuleName "Foo")
+            Right roots = findExports ast [mkModuleName "Foo"]
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.baz"]
 
@@ -51,7 +51,7 @@ spec = do
       |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
-            Right roots = findExports ast (mkModuleName "Foo")
+            Right roots = findExports ast [mkModuleName "Foo"]
         fmap showName (deadNames graph roots)
           `shouldBe` []
 
@@ -64,7 +64,7 @@ spec = do
       |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
-            Right roots = findExports ast (mkModuleName "Foo")
+            Right roots = findExports ast [mkModuleName "Foo"]
         fmap showName (deadNames graph roots)
           `shouldBe` (words "Foo.a Foo.b Foo.c")
 
@@ -78,6 +78,6 @@ spec = do
         |] $ do
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
-            Right roots = findExports ast (mkModuleName "Foo")
+            Right roots = findExports ast [mkModuleName "Foo"]
         fmap showName (deadNames graph roots)
           `shouldBe` []

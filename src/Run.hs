@@ -16,7 +16,7 @@ import           Ast
 data Options
   = Options {
     sourceDirs :: [FilePath],
-    root :: String
+    root :: [String]
   }
   deriving (Show, GHC.Generics.Generic)
 
@@ -30,19 +30,19 @@ run = do
   --  UseForPositionalArguments "root" "ROOT" :
     []
   files <- findHaskellFiles (sourceDirs options)
-  deadNames <- deadNamesFromFiles files (mkModuleName (root options))
+  deadNames <- deadNamesFromFiles files (map mkModuleName (root options))
   case deadNames of
     [] -> return ()
     _ -> do
       forM_ deadNames putStrLn
       exitWith $ ExitFailure 1
 
-deadNamesFromFiles :: [FilePath] -> ModuleName -> IO [String]
-deadNamesFromFiles files root = do
+deadNamesFromFiles :: [FilePath] -> [ModuleName] -> IO [String]
+deadNamesFromFiles files roots = do
   ast <- parse files
   case ast of
     Left err -> die err
-    Right ast -> case findExports ast root of
+    Right ast -> case findExports ast roots of
       Left err -> die err
       Right rootExports -> do
         let graph = usedTopLevelNames ast

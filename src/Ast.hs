@@ -78,15 +78,17 @@ parse files =
       (parseModule mod >>= typecheckModule)
     return $ Right $ map toModule typecheckedModules
 
-findExports :: Ast -> ModuleName -> Either String [Name]
-findExports ast name =
-  case filter (\ m -> moduleName m == name) ast of
-    [Module _ Nothing declarations] ->
-      return $ boundNames declarations
-    [Module _ (Just exports) _] ->
-      return $ concatMap (ieNames . unLoc) exports
-    [] -> Left ("cannot find module: " ++ moduleNameString name)
-    _ -> Left ("found module multiple times: " ++ moduleNameString name)
+findExports :: Ast -> [ModuleName] -> Either String [Name]
+findExports ast names = concat <$> mapM inner names
+  where
+    inner name =
+      case filter (\ m -> moduleName m == name) ast of
+        [Module _ Nothing declarations] ->
+          return $ boundNames declarations
+        [Module _ (Just exports) _] ->
+          return $ concatMap (ieNames . unLoc) exports
+        [] -> Left ("cannot find module: " ++ moduleNameString name)
+        _ -> Left ("found module multiple times: " ++ moduleNameString name)
 
 -- * name usage graph
 

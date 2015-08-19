@@ -1,6 +1,8 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Helper where
 
+import           Control.Exception
 import           Control.Monad
 import           Data.String.Interpolate.Util
 import           GHC
@@ -10,8 +12,8 @@ import           System.Exit
 import           System.FilePath
 import           Test.Mockery.Directory
 
-import           Graph
 import           Ast
+import           Graph
 
 withFoo :: String -> IO () -> IO ()
 withFoo code =
@@ -41,3 +43,6 @@ showName name = mod ++ "." ++ id
     mod = maybe "<unknown module>" (showSDocUnsafe . ppr) $
       nameModule_maybe name
     id = showSDocUnsafe $ ppr name
+
+swallowExceptions :: IO () -> IO ()
+swallowExceptions = handle (\ (_ :: SomeException) -> return ())
