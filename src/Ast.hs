@@ -79,7 +79,7 @@ findExports :: Ast -> ModuleName -> Either String [Name]
 findExports ast name =
   case filter (\ m -> moduleName m == name) ast of
     [Module _ Nothing declarations] ->
-      return $ topLevelNames declarations
+      return $ boundNames declarations
     [Module _ (Just exports) _] ->
       return $ concatMap (ieNames . unLoc) exports
     [] -> Left ("cannot find module: " ++ moduleNameString name)
@@ -87,15 +87,9 @@ findExports ast name =
 
 -- * name usage graph
 
-topLevelNames :: HsGroup Name -> [Name]
-topLevelNames = map fst . concatMap usedNamesFromBinding . universeBi
-
 usedTopLevelNames :: Ast -> Graph Name
 usedTopLevelNames =
-  universeBi >>>
-  concatMap usedNamesFromBinding >>>
-  removeLocalNames >>>
-  Graph
+  Graph . removeLocalNames . nameGraph
   where
     isTopLevelName :: Name -> Bool
     isTopLevelName = maybe False (const True) .  nameModule_maybe
@@ -105,12 +99,23 @@ usedTopLevelNames =
       filter (isTopLevelName . fst) >>>
       map (second (filter isTopLevelName))
 
-usedNamesFromBinding :: HsBindLR Name Name -> [(Name, [Name])]
-usedNamesFromBinding binding =
-  map (, nub $ usedNames bn binding) bn
-    where
-      bn = boundNames binding
+-- | extracts the name usage graph from ASTs
+class NameGraph ast where
+  nameGraph :: ast -> [(Name, [Name])]
 
+instance NameGraph a => NameGraph [a] where
+  nameGraph = concatMap nameGraph
+
+instance NameGraph Module where
+  nameGraph m = nameGraph (universeBi m :: [HsBindLR Name Name])
+
+instance NameGraph (HsBindLR Name Name) where
+  nameGraph binding =
+    map (, nub $ usedNames bn binding) bn
+      where
+        bn = boundNames binding
+
+-- | extracts the bound names from ASTs
 class BoundNames ast where
   boundNames :: ast -> [Name]
 
@@ -119,6 +124,9 @@ instance (BoundNames a) => BoundNames (Located a) where
 
 instance (BoundNames a) => BoundNames [a] where
   boundNames = concatMap boundNames
+
+instance BoundNames (HsGroup Name) where
+  boundNames group = boundNames (universeBi group :: [HsBindLR Name Name])
 
 instance BoundNames (HsBindLR Name Name) where
   boundNames = \ case
@@ -139,5 +147,6 @@ instance BoundNames (HsConPatDetails Name) where
     PrefixCon args -> boundNames args
     _ -> error "Not yet implemented: HsConPatDetails"
 
-usedNames :: (Data ast) => [Name] -> ast -> [Name]
+-- | extracts all used names from ASTs
+usedNames :: [Name] -> HsBindLR Name Name -> [Name]
 usedNames ids = filter (`notElem` ids) . universeBi
