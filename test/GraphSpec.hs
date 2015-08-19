@@ -19,6 +19,7 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
+-- fixme: refactor this:
         Right ast <- parse ["Foo.hs"]
         let graph = usedTopLevelNames ast
             Right roots = findExports ast (mkModuleName "Foo")
@@ -66,3 +67,17 @@ spec = do
             Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` (words "Foo.a Foo.b Foo.c")
+
+    it "finds used names in default implementations of methods in class declarations" $ do
+      withFoo [i|
+        module Foo () where
+        class A a where
+          a :: a -> String
+          a _ = foo
+        foo = "foo"
+        |] $ do
+        Right ast <- parse ["Foo.hs"]
+        let graph = usedTopLevelNames ast
+            Right roots = findExports ast (mkModuleName "Foo")
+        fmap showName (deadNames graph roots)
+          `shouldBe` []

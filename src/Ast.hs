@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE NamedFieldPuns #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -93,7 +94,7 @@ usedTopLevelNames :: Ast -> Graph Name
 usedTopLevelNames ast =
   Graph
     (removeLocalNames (nameGraph ast))
-    (instanceUsedNames ast)
+    (getClassMethodUsedNames ast)
   where
     isTopLevelName :: Name -> Bool
     isTopLevelName = maybe False (const True) .  nameModule_maybe
@@ -175,11 +176,19 @@ instance BoundNames (ConDecl Name) where
     concatMap (map unLoc . cd_fld_names) (universeBi conDecl :: [ConDeclField Name])
 
 -- | extracts names used in instance declarations
-instanceUsedNames :: Ast -> [Name]
-instanceUsedNames = concatMap fromInstanceDecl . universeBi
+getClassMethodUsedNames :: Ast -> [Name]
+getClassMethodUsedNames ast =
+  concatMap fromInstanceDecl (universeBi ast) ++
+  concatMap fromClassDecl (universeBi ast)
   where
     fromInstanceDecl :: InstDecl Name -> [Name]
     fromInstanceDecl = concatMap usedNamesBind . universeBi
+
+    fromClassDecl :: TyClDecl Name -> [Name]
+    fromClassDecl = \ case
+      ClassDecl{tcdMeths} ->
+        concatMap usedNamesBind $ map unLoc $ bagToList tcdMeths
+      _ -> []
 
     usedNamesBind :: HsBindLR Name Name -> [Name]
     usedNamesBind bind = usedNames (boundNames bind) bind
