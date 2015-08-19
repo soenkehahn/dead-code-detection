@@ -47,6 +47,9 @@ spec = do
           withArgs (words "-i. --root A --root B") run
         output `shouldBe` ""
 
+    it "complains when it's invoked with no arguments" $ do
+      withArgs [] run `shouldThrow` (== ExitFailure 1)
+
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do
       let a = ("A", [i|

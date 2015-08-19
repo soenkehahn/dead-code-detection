@@ -18,7 +18,7 @@ data Options
     sourceDirs :: [FilePath],
     root :: [String]
   }
-  deriving (Show, GHC.Generics.Generic)
+  deriving (Show, Eq, GHC.Generics.Generic)
 
 instance Generic Options
 instance HasDatatypeInfo Options
@@ -29,6 +29,8 @@ run = do
     AddShortOption "sourceDirs" 'i' :
   --  UseForPositionalArguments "root" "ROOT" :
     []
+  when (options == Options [] []) $
+    die "missing option: --root=STRING"
   files <- findHaskellFiles (sourceDirs options)
   deadNames <- deadNamesFromFiles files (map mkModuleName (root options))
   case deadNames of
