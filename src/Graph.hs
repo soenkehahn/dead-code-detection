@@ -10,7 +10,7 @@ import qualified Data.Set as Set
 import           Name
 
 data Graph a = Graph {
-  usageGraph :: [(a, [a])],
+  _usageGraph :: [(a, [a])],
   classMethodsUsedNames :: [a]
 } deriving (Show, Functor)
 

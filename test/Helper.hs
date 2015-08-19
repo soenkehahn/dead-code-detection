@@ -46,3 +46,6 @@ showName name = mod ++ "." ++ id
 
 swallowExceptions :: IO () -> IO ()
 swallowExceptions = handle (\ (_ :: SomeException) -> return ())
+
+usageGraph :: Graph a -> [(a, [a])]
+usageGraph = _usageGraph

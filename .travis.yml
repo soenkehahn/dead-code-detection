@@ -18,6 +18,11 @@ script:
   - stack build --ghc-options=-Werror
   - stack test --ghc-options=-Werror
 
+  # detecting dead code in this project
+  - stack exec ghc-pkg expose ghc
+  - stack exec -- dead-code-detection --root Main -isrc -idriver
+  - stack exec -- dead-code-detection --root Main -isrc -itest
+
 cache:
   directories:
     - $HOME/.stack

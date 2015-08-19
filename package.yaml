@@ -25,6 +25,7 @@ executables:
     main: Main.hs
     source-dirs:
       - src
+      - driver
 
 tests:
   spec:
