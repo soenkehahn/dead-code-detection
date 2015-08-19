@@ -3,7 +3,6 @@
 
 module Graph where
 
-import           Data.Foldable
 import qualified Data.Graph.Wrapper as Wrapper
 import           Data.Graph.Wrapper hiding (Graph, toList)
 import           Data.List

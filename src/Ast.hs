@@ -172,7 +172,6 @@ instance BoundNames (TyClGroup Name) where
 
 instance BoundNames (ConDecl Name) where
   boundNames conDecl =
-    map unLoc (con_names conDecl) ++
     concatMap (map unLoc . cd_fld_names) (universeBi conDecl :: [ConDeclField Name])
 
 -- | extracts names used in instance declarations

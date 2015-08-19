@@ -124,12 +124,12 @@ spec = do
           Graph [("Foo.foo", [])] []
 
     context "data type declarations" $ do
-      it "does detect defined constructors" $ do
+      it "does not include constructor names" $ do
         withFooHeader [i|
           data A = A
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [("Foo.A", [])] []
+            Graph [] []
 
       it "does detect selectors" $ do
         withFooHeader [i|
