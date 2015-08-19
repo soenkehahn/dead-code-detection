@@ -90,8 +90,10 @@ findExports ast name =
 -- * name usage graph
 
 usedTopLevelNames :: Ast -> Graph Name
-usedTopLevelNames =
-  Graph . removeLocalNames . nameGraph
+usedTopLevelNames ast =
+  Graph
+    (removeLocalNames (nameGraph ast))
+    (instanceUsedNames ast)
   where
     isTopLevelName :: Name -> Bool
     isTopLevelName = maybe False (const True) .  nameModule_maybe
@@ -161,6 +163,16 @@ instance BoundNames (HsConPatDetails Name) where
   boundNames = \ case
     PrefixCon args -> boundNames args
     _ -> error "Not yet implemented: HsConPatDetails"
+
+-- | extracts names used in instance declarations
+instanceUsedNames :: Ast -> [Name]
+instanceUsedNames = concatMap fromInstanceDecl . universeBi
+  where
+    fromInstanceDecl :: InstDecl Name -> [Name]
+    fromInstanceDecl = concatMap usedNamesBind . universeBi
+
+    usedNamesBind :: HsBindLR Name Name -> [Name]
+    usedNamesBind bind = usedNames (boundNames bind) bind
 
 -- | extracts all used names from ASTs
 usedNames :: [Name] -> HsBindLR Name Name -> [Name]

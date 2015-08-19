@@ -39,3 +39,17 @@ spec = do
             Right roots = findExports ast (mkModuleName "Foo")
         fmap showName (deadNames graph roots)
           `shouldBe` ["Foo.baz"]
+
+    it "detects usage of names in instance methods" $ do
+      withFoo [i|
+        module Foo () where
+        data A = A
+        instance Show A where
+          show A = foo
+        foo = "foo"
+      |] $ do
+        Right ast <- parse ["Foo.hs"]
+        let graph = usedTopLevelNames ast
+            Right roots = findExports ast (mkModuleName "Foo")
+        fmap showName (deadNames graph roots)
+          `shouldBe` []

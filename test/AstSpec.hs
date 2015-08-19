@@ -11,9 +11,9 @@ import           System.IO
 import           System.IO.Silently
 import           Test.Hspec
 
+import           Ast
 import           Graph
 import           Helper
-import           Ast
 
 showAst :: Ast -> String
 showAst = showSDocUnsafe . ppr
@@ -48,7 +48,7 @@ spec = do
           |])
       withModules [a, b] $ do
         parseStringGraph ["B.hs"] `shouldReturn`
-          Graph [("B.bar", ["A.foo"])]
+          Graph [("B.bar", ["A.foo"])] []
 
     it "can be used to parse multiple files" $ do
       let a = ("A", [i|
@@ -61,7 +61,7 @@ spec = do
           |])
       withModules [a, b] $ do
         parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
-          Graph [("A.foo", []), ("B.bar", [])]
+          Graph [("A.foo", []), ("B.bar", [])] []
 
     it "does not create any files" $ do
       withFooHeader [i|
@@ -102,7 +102,7 @@ spec = do
         foo = bar
         bar = ()
       |] $ do
-        Graph g <- parseStringGraph ["Foo.hs"]
+        g <- usageGraph <$> parseStringGraph ["Foo.hs"]
         g `shouldMatchList` [("Foo.foo", ["Foo.bar"]), ("Foo.bar", ["GHC.Tuple.()"])]
 
     it "detects usage in ViewPatterns" $ do
@@ -112,7 +112,7 @@ spec = do
         x y = ()
         bar (x -> y) = ()
       |] $ do
-        Graph g <- parseStringGraph ["Foo.hs"]
+        g <- usageGraph <$> parseStringGraph ["Foo.hs"]
         let Just used = lookup "Foo.bar" g
         used `shouldContain` ["Foo.x"]
 
@@ -121,7 +121,7 @@ spec = do
         foo = let x = x in x
       |] $ do
         parseStringGraph ["Foo.hs"] `shouldReturn`
-          Graph [("Foo.foo", [])]
+          Graph [("Foo.foo", [])] []
 
     it "doesn't return bound names for instance methods" $ do
       withFooHeader [i|
@@ -129,8 +129,7 @@ spec = do
         instance Show A where
           show A = ""
       |] $ do
-        parseStringGraph ["Foo.hs"] `shouldReturn`
-          Graph []
+        (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` []
 
     context "PatBind" $ do
       it "can parse pattern binding" $ do
@@ -138,11 +137,11 @@ spec = do
           (Just foo) = let x = x in x
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [("Foo.foo", ["GHC.Base.Just"])]
+            Graph [("Foo.foo", ["GHC.Base.Just"])] []
 
       it "can parse tuple pattern binding" $ do
         withFooHeader [i|
           (a, b) = let x = x in x
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [("Foo.a", []), ("Foo.b", [])]
+            Graph [("Foo.a", []), ("Foo.b", [])] []
