@@ -49,3 +49,7 @@ swallowExceptions = handle (\ (_ :: SomeException) -> return ())
 
 usageGraph :: Graph a -> [(a, [a])]
 usageGraph = _usageGraph
+
+eitherToError :: IO (Either String a) -> IO a
+eitherToError action = do
+  either die return =<< action

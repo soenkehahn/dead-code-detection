@@ -10,6 +10,14 @@ import           Graph
 import           Helper
 import           Ast
 
+getDeadNames :: IO [String]
+getDeadNames = do
+  ast <- eitherToError $ parse ["Foo.hs"]
+  let graph = usedTopLevelNames ast
+  roots <- eitherToError $ return $
+    findExports ast [mkModuleName "Foo"]
+  return $ fmap showName $ deadNames graph roots
+
 spec :: Spec
 spec = do
   describe "deadNames" $ do
@@ -19,12 +27,7 @@ spec = do
         foo = ()
         bar = ()
       |] $ do
--- fixme: refactor this:
-        Right ast <- parse ["Foo.hs"]
-        let graph = usedTopLevelNames ast
-            Right roots = findExports ast [mkModuleName "Foo"]
-        fmap showName (deadNames graph roots)
-          `shouldBe` ["Foo.bar"]
+        getDeadNames `shouldReturn` ["Foo.bar"]
 
     it "allows to specify multiple roots" $ do
       withFoo [i|
@@ -35,11 +38,7 @@ spec = do
         bar = ()
         baz = ()
       |] $ do
-        Right ast <- parse ["Foo.hs"]
-        let graph = usedTopLevelNames ast
-            Right roots = findExports ast [mkModuleName "Foo"]
-        fmap showName (deadNames graph roots)
-          `shouldBe` ["Foo.baz"]
+        getDeadNames `shouldReturn` ["Foo.baz"]
 
     it "detects usage of names in instance methods" $ do
       withFoo [i|
@@ -49,11 +48,7 @@ spec = do
           show A = foo
         foo = "foo"
       |] $ do
-        Right ast <- parse ["Foo.hs"]
-        let graph = usedTopLevelNames ast
-            Right roots = findExports ast [mkModuleName "Foo"]
-        fmap showName (deadNames graph roots)
-          `shouldBe` []
+        getDeadNames `shouldReturn` []
 
     it "returns dead names in topological order" $ do
       withFoo [i|
@@ -62,11 +57,7 @@ spec = do
         a = b
         c = ()
       |] $ do
-        Right ast <- parse ["Foo.hs"]
-        let graph = usedTopLevelNames ast
-            Right roots = findExports ast [mkModuleName "Foo"]
-        fmap showName (deadNames graph roots)
-          `shouldBe` (words "Foo.a Foo.b Foo.c")
+        getDeadNames `shouldReturn` (words "Foo.a Foo.b Foo.c")
 
     it "finds used names in default implementations of methods in class declarations" $ do
       withFoo [i|
@@ -76,8 +67,4 @@ spec = do
           a _ = foo
         foo = "foo"
         |] $ do
-        Right ast <- parse ["Foo.hs"]
-        let graph = usedTopLevelNames ast
-            Right roots = findExports ast [mkModuleName "Foo"]
-        fmap showName (deadNames graph roots)
-          `shouldBe` []
+          getDeadNames `shouldReturn` []
