@@ -2,6 +2,7 @@
 
 module RunSpec where
 
+import           Control.Exception
 import           Data.String.Interpolate
 import           GHC
 import           System.Environment
@@ -49,6 +50,12 @@ spec = do
 
     it "complains when it's invoked with no arguments" $ do
       withArgs [] run `shouldThrow` (== ExitFailure 1)
+
+    it "has a version option" $ do
+      output <- capture_ $
+        handle (\ ExitSuccess -> return ()) $
+        withArgs ["--version"] run
+      output `shouldContain` "version: "
 
   describe "deadNamesFromFiles" $ do
     it "can be run on multiple modules" $ do

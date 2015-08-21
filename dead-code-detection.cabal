@@ -36,6 +36,7 @@ executable dead-code-detection
     , containers
     , uniplate
     , ghc-paths
+    , gitrev
   other-modules:
       Ast
       Files
@@ -62,6 +63,7 @@ test-suite spec
     , containers
     , uniplate
     , ghc-paths
+    , gitrev
     , hspec
     , mockery
     , interpolate

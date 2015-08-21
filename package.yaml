@@ -20,6 +20,7 @@ dependencies:
   - containers
   - uniplate
   - ghc-paths
+  - gitrev
 
 executables:
   dead-code-detection:

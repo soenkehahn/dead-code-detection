@@ -20,8 +20,8 @@ script:
 
   # detecting dead code in this project
   - stack exec ghc-pkg expose ghc
-  - stack exec -- dead-code-detection --root Main -isrc -idriver
-  - stack exec -- dead-code-detection --root Main -isrc -itest
+  - "! (stack exec -- dead-code-detection --root Main -isrc -idriver -i .stack-work/dist/x86_64-linux/Cabal-1.22.4.0/build/autogen/ | grep -v Paths_dead_code_detection)"
+  - "! (stack exec -- dead-code-detection --root Main -isrc -itest -i .stack-work/dist/x86_64-linux/Cabal-1.22.4.0/build/autogen/ | grep -v Paths_dead_code_detection)"
 
 cache:
   directories:

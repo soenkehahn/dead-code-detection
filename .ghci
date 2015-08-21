@@ -1,1 +1,1 @@
-:set -itest -isrc -package ghc -Wall -fno-warn-name-shadowing
+:set -itest -isrc -idist/build/autogen -package ghc -Wall -fno-warn-name-shadowing
