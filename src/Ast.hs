@@ -58,8 +58,7 @@ toModule m = case tm_renamed_source m of
 
 parse :: [FilePath] -> IO (Either String Ast)
 parse files =
-  handleSourceError (return . Left . showSourceError) $
-  hSilence [stdout, stderr] $
+  errorHandler $
   runGhc (Just libdir) $ do
     dynFlags <- getSessionDynFlags
     void $ setSessionDynFlags $ dynFlags {
@@ -69,14 +68,22 @@ parse files =
     targets <- forM files $ \ file -> guessTarget file Nothing
     setTargets targets
     modSummaries <- depanal [] False
-    _ <- load LoadAllTargets
-    let isModuleFromFile m = case ml_hs_file $ ms_location m of
-          Nothing -> error ("parse: module without file")
-          Just file -> file `elem` files
-        mods = filter isModuleFromFile modSummaries
-    typecheckedModules <- forM mods $ \ mod ->
-      (parseModule mod >>= typecheckModule)
-    return $ Right $ map toModule typecheckedModules
+    r <- load LoadAllTargets
+    case r of
+      Failed -> return Nothing
+      Succeeded -> do
+        let isModuleFromFile m = case ml_hs_file $ ms_location m of
+              Nothing -> error ("parse: module without file")
+              Just file -> file `elem` files
+            mods = filter isModuleFromFile modSummaries
+        typecheckedModules <- forM mods $ \ mod ->
+          (parseModule mod >>= typecheckModule)
+        return $ Just $ map toModule typecheckedModules
+
+errorHandler :: IO (Maybe a) -> IO (Either String a)
+errorHandler action = do
+  (errs, a) <- hCapture [stderr] action
+  return $ maybe (Left errs) Right a
 
 findExports :: Ast -> [ModuleName] -> Either String [Name]
 findExports ast names = concat <$> mapM inner names

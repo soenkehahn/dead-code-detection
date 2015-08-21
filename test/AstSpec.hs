@@ -29,7 +29,7 @@ spec = do
     it "handles an invalid module gracefully" $ do
       withFooHeader "foo = bar" $ do
         result <- parse ["Foo.hs"]
-        void result `shouldBe` Left "Foo.hs:2:7: Not in scope: ‘bar’\n"
+        void result `shouldBe` Left "\nFoo.hs:2:7: Not in scope: ‘bar’\n"
 
     it "doesn't output error messages" $ do
       withFoo "foo = bar" $ do

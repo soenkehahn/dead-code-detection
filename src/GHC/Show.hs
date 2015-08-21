@@ -3,10 +3,8 @@
 module GHC.Show where
 
 import           Data.String.Conversions
-import           ErrUtils
 import           FastString
 import           GHC
-import           HscTypes
 import           Name
 import           Outputable
 
@@ -20,9 +18,6 @@ formatName name =
         show (srcLocLine loc) ++ ":" ++
         show (srcLocCol loc)
       UnhelpfulLoc s -> cs (fs_bs s)
-
-showSourceError :: SourceError -> String
-showSourceError = unlines . map showSDocUnsafe . pprErrMsgBagWithLoc . srcErrorMessages
 
 -- * development utils
 
