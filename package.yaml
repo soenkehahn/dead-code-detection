@@ -7,6 +7,9 @@ license: BSD3
 
 github: soenkehahn/dead-code-detection
 
+extra-source-files:
+  README.md
+
 ghc-options: -Wall -fno-warn-name-shadowing
 
 dependencies:
