@@ -21,5 +21,6 @@ formatName name =
 
 -- * development utils
 
-nyi :: Outputable doc => doc -> a
-nyi = error . ("Not yet implemented: " ++) . showSDocUnsafe . ppr
+nyi :: Outputable doc => String -> doc -> a
+nyi msg x = error $
+  ("Not yet implemented: " ++ msg ++ " " ++ (showSDocUnsafe $ ppr x))

@@ -162,7 +162,7 @@ instance BoundNames (HsBindLR Name Name) where
   boundNames = \ case
     FunBind id _ _ _ _ _ -> [unLoc id]
     PatBind pat _ _ _ _ -> boundNames pat
-    bind -> nyi bind
+    bind -> nyi "HsBindLR" bind
 
 instance BoundNames (Pat Name) where
   boundNames = \ case
@@ -170,11 +170,13 @@ instance BoundNames (Pat Name) where
     ConPatIn _ p -> boundNames p
     VarPat p -> [p]
     TuplePat pats _ _ -> boundNames pats
-    pat -> nyi pat
+    WildPat _ -> []
+    pat -> nyi "Pat" pat
 
 instance BoundNames (HsConPatDetails Name) where
   boundNames = \ case
     PrefixCon args -> boundNames args
+    InfixCon a b -> boundNames [a, b]
     _ -> error "Not yet implemented: HsConPatDetails"
 
 instance BoundNames (TyClGroup Name) where
