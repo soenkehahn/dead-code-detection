@@ -142,9 +142,7 @@ instance NameGraph (HsValBinds Name) where
 
 instance NameGraph (HsBindLR Name Name) where
   nameGraph binding =
-    map (, nub $ usedNames bn binding) bn
-      where
-        bn = boundNames binding
+    map (, nub $ usedNames binding) (boundNames binding)
 
 -- | extracts the bound names from ASTs
 class BoundNames ast where
@@ -207,11 +205,11 @@ getClassMethodUsedNames ast =
       _ -> []
 
     usedNamesBind :: HsBindLR Name Name -> [Name]
-    usedNamesBind bind = usedNames (boundNames bind) bind
+    usedNamesBind bind = usedNames bind
 
 -- | extracts all used names from ASTs
-usedNames :: [Name] -> HsBindLR Name Name -> [Name]
-usedNames _ids = catMaybes . map extractHsVar . (universeBi :: HsBindLR Name Name -> [HsExpr Name])
+usedNames :: HsBindLR Name Name -> [Name]
+usedNames = catMaybes . map extractHsVar . (universeBi :: HsBindLR Name Name -> [HsExpr Name])
   where
     extractHsVar :: HsExpr Name -> Maybe Name
     extractHsVar (HsVar n) = Just n
