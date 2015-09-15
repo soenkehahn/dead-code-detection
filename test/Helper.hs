@@ -21,7 +21,7 @@ withFoo code =
 
 withFooHeader :: String -> IO () -> IO ()
 withFooHeader code =
-  withFoo ("module Foo where\n" ++ code)
+  withFoo ("module Foo where\n" ++ unindent code)
 
 withModules :: [(String, String)] -> IO () -> IO ()
 withModules modules action = do

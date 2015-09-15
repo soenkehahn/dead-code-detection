@@ -19,6 +19,7 @@ import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
 import           Data.List
+import           Data.Maybe
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
@@ -210,4 +211,8 @@ getClassMethodUsedNames ast =
 
 -- | extracts all used names from ASTs
 usedNames :: [Name] -> HsBindLR Name Name -> [Name]
-usedNames ids = filter (`notElem` ids) . universeBi
+usedNames _ids = catMaybes . map extractHsVar . (universeBi :: HsBindLR Name Name -> [HsExpr Name])
+  where
+    extractHsVar :: HsExpr Name -> Maybe Name
+    extractHsVar (HsVar n) = Just n
+    extractHsVar _ = Nothing

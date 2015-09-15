@@ -61,7 +61,7 @@ spec = do
           |])
       withModules [a, b] $ do
         parseStringGraph ["A.hs", "B.hs"] `shouldReturn`
-          Graph [("A.foo", []), ("B.bar", [])] []
+          Graph [("A.foo", ["A.foo"]), ("B.bar", ["B.bar"])] []
 
     it "does not create any files" $ do
       withFooHeader [i|
@@ -158,7 +158,7 @@ spec = do
           (Just foo) = let x = x in x
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [("Foo.foo", ["GHC.Base.Just"])] []
+            Graph [("Foo.foo", [])] []
 
       it "can parse tuple pattern binding" $ do
         withFooHeader [i|
@@ -166,3 +166,12 @@ spec = do
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
             Graph [("Foo.a", []), ("Foo.b", [])] []
+
+    context "local variables" $ do
+      it "recognizes recursive definitions" $ do
+        withFooHeader [i|
+          foo = foo
+          bar = ()
+        |] $ do
+          parseStringGraph ["Foo.hs"] `shouldReturn`
+            Graph [("Foo.bar", ["GHC.Tuple.()"]), ("Foo.foo", ["Foo.foo"])] []
