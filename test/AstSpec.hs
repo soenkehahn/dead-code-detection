@@ -73,16 +73,17 @@ spec = do
         files `shouldMatchList` (words ". .. Foo.hs")
 
   describe "findExports" $ do
-    let find moduleFile moduleName = do
-          Right ast <- parse [moduleFile]
-          let Right exports = findExports ast moduleName
+    let find moduleFiles moduleName = do
+          ast <- either error id <$> parse moduleFiles
+          let exports = either error id $
+                findExports ast moduleName
           return $ map showName exports
     it "finds the names exported by a given module" $ do
       withFooHeader [i|
         foo = ()
         bar = ()
       |] $ do
-        exports <- find "Foo.hs" [mkModuleName "Foo"]
+        exports <- find ["Foo.hs"] [mkModuleName "Foo"]
         exports `shouldMatchList` ["Foo.foo", "Foo.bar"]
 
     context "when given a module with an export list" $ do
@@ -93,8 +94,21 @@ spec = do
               bar = ()
             |])
         withModules [a] $ do
-          exports <- find "A.hs" [mkModuleName "A"]
+          exports <- find ["A.hs"] [mkModuleName "A"]
           exports `shouldBe` ["A.foo"]
+
+    it "includes identifiers exported by module" $ do
+      let a = ("A", [i|
+            module A (module B) where
+            import B
+          |])
+          b = ("B", [i|
+            module B where
+            b = ()
+          |])
+      withModules [a, b] $ do
+        exports <- find ["A.hs", "B.hs"] [mkModuleName "A"]
+        exports `shouldBe` ["B.b"]
 
   describe "usedTopLevelNames" $ do
     it "returns the graph of identifier usage" $ do

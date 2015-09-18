@@ -94,9 +94,15 @@ findExports ast names = concat <$> mapM inner names
         [Module _ Nothing declarations] ->
           return $ boundNames declarations
         [Module _ (Just exports) _] ->
-          return $ concatMap (ieNames . unLoc) exports
+          concat <$> mapM (extractExportedNames ast . unLoc) exports
         [] -> Left ("cannot find module: " ++ moduleNameString name)
         _ -> Left ("found module multiple times: " ++ moduleNameString name)
+
+extractExportedNames :: Ast -> IE Name -> Either String [Name]
+extractExportedNames ast = \ case
+  IEModuleContents (unLoc -> moduleName) ->
+    findExports ast [moduleName]
+  x -> return $ ieNames x
 
 -- * name usage graph
 
