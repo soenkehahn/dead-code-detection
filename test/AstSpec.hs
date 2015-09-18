@@ -172,7 +172,7 @@ spec = do
           (Just foo) = let x = x in x
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [("Foo.foo", [])] []
+            Graph [("Foo.foo", ["GHC.Base.Just"])] []
 
       it "can parse tuple pattern binding" $ do
         withFooHeader [i|

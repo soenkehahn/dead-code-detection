@@ -19,7 +19,6 @@ import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
 import           Data.List
-import           Data.Maybe
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
@@ -28,6 +27,7 @@ import           Outputable
 import           System.IO
 import           System.IO.Silently
 
+import           Ast.UsedNames
 import           GHC.Show
 import           Graph
 
@@ -211,11 +211,3 @@ getClassMethodUsedNames ast =
 
     usedNamesBind :: HsBindLR Name Name -> [Name]
     usedNamesBind bind = usedNames bind
-
--- | extracts all used names from ASTs
-usedNames :: HsBindLR Name Name -> [Name]
-usedNames = catMaybes . map extractHsVar . (universeBi :: HsBindLR Name Name -> [HsExpr Name])
-  where
-    extractHsVar :: HsExpr Name -> Maybe Name
-    extractHsVar (HsVar n) = Just n
-    extractHsVar _ = Nothing
