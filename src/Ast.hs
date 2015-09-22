@@ -138,8 +138,7 @@ instance NameGraph Module where
 
 instance NameGraph (HsGroup Name) where
   nameGraph group =
-    nameGraph (hs_valds group) ++
-    map (, []) (boundNames (hs_tyclds group))
+    nameGraph (hs_valds group)
 
 instance NameGraph (HsValBinds Name) where
   nameGraph = \ case

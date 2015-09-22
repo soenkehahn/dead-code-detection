@@ -145,12 +145,12 @@ spec = do
           parseStringGraph ["Foo.hs"] `shouldReturn`
             Graph [] []
 
-      it "does detect selectors" $ do
+      it "ignores selectors" $ do
         withFooHeader [i|
           data A = A { foo :: () }
         |] $ do
           boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
-          boundNames `shouldContain` ["Foo.foo"]
+          boundNames `shouldBe` []
 
       it "does not detect selectors starting with _" $ do
         withFooHeader [i|
