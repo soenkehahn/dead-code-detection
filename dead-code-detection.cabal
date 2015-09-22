@@ -42,6 +42,7 @@ executable dead-code-detection
     , gitrev
   other-modules:
       Ast
+      Ast.UsedNames
       Files
       GHC.Show
       Graph
@@ -79,6 +80,7 @@ test-suite spec
       Helper
       RunSpec
       Ast
+      Ast.UsedNames
       Files
       GHC.Show
       Graph

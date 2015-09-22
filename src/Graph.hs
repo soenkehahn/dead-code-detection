@@ -1,13 +1,17 @@
 {-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Graph where
 
+import           Control.Arrow
 import qualified Data.Graph.Wrapper as Wrapper
 import           Data.Graph.Wrapper hiding (Graph, toList)
 import           Data.List
 import qualified Data.Set as Set
 import           Name
+
+import           Utils
 
 data Graph a = Graph {
   _usageGraph :: [(a, [a])],
@@ -19,7 +23,7 @@ instance (Ord a) => Eq (Graph a) where
     a === b &&
     aUseds === bUseds
     where
-      x === y = sort (nub x) == sort (nub y)
+      x === y = sort (nubOrd x) == sort (nubOrd y)
 
 toWrapperGraph :: Ord a => Graph a -> Wrapper.Graph a ()
 toWrapperGraph (Graph g _) = fromListLenient $
@@ -41,3 +45,9 @@ deadNamesSingle graph root =
 sortTopologically :: Ord a => Wrapper.Graph a () -> Set.Set a -> [a]
 sortTopologically graph set =
   filter (`Set.member` set) (topologicalSort graph)
+
+addUsedNames :: Ord a => [a] -> [(a, [a])] -> [(a, [a])]
+addUsedNames used = map (second (nubOrd . (++ used)))
+
+withoutUsedNames :: [a] -> [(a, [a])]
+withoutUsedNames = map (, [])

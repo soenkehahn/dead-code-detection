@@ -18,7 +18,6 @@ import           Control.Arrow ((>>>), second)
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
-import           Data.List
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
@@ -92,7 +91,7 @@ findExports ast names = concat <$> mapM inner names
     inner name =
       case filter (\ m -> moduleName m == name) ast of
         [Module _ Nothing declarations] ->
-          return $ boundNames declarations
+          return $ map fst $ nameGraph declarations
         [Module _ (Just exports) _] ->
           concat <$> mapM (extractExportedNames ast . unLoc) exports
         [] -> Left ("cannot find module: " ++ moduleNameString name)
@@ -120,7 +119,7 @@ usedTopLevelNames ast =
       filter (isTopLevelName . fst) >>>
       map (second (filter isTopLevelName))
 
--- | extracts the name usage graph from ASTs
+-- | extracts the name usage graph from ASTs (only value level)
 class NameGraph ast where
   nameGraph :: ast -> [(Name, [Name])]
 
@@ -137,8 +136,17 @@ instance NameGraph Module where
   nameGraph = nameGraph . moduleDeclarations
 
 instance NameGraph (HsGroup Name) where
-  nameGraph group =
-    nameGraph (hs_valds group)
+  nameGraph = \ case
+    HsGroup valBinds [] tyclds _instances [] [] [] foreign_decls [] [] [] [] [] ->
+      nameGraph valBinds ++
+      nameGraph tyclds ++
+      nameGraph foreign_decls
+    x -> o x
+
+instance NameGraph (ForeignDecl Name) where
+  nameGraph = \ case
+    ForeignImport name _ _ _ -> [(unLoc name, [])]
+    x -> o x
 
 instance NameGraph (HsValBinds Name) where
   nameGraph = \ case
@@ -146,53 +154,58 @@ instance NameGraph (HsValBinds Name) where
     ValBindsIn _ _ -> error "ValBindsIn shouldn't exist after renaming"
 
 instance NameGraph (HsBindLR Name Name) where
-  nameGraph binding =
-    map (, nub $ usedNames binding) (boundNames binding)
+  nameGraph bind = addUsedNames (usedNames bind) $ case bind of
+    FunBind id _ _ _ _ _ -> withoutUsedNames [unLoc id]
+    PatBind pat _ _ _ _ -> nameGraph pat
+    x -> o x
 
--- | extracts the bound names from ASTs
-class BoundNames ast where
-  boundNames :: ast -> [Name]
-
-instance (BoundNames a) => BoundNames (Located a) where
-  boundNames = boundNames . unLoc
-
-instance (BoundNames a) => BoundNames [a] where
-  boundNames = concatMap boundNames
-
-instance BoundNames (HsGroup Name) where
-  boundNames group = boundNames (universeBi group :: [HsBindLR Name Name])
-
-instance BoundNames (HsBindLR Name Name) where
-  boundNames = \ case
-    FunBind id _ _ _ _ _ -> [unLoc id]
-    PatBind pat _ _ _ _ -> boundNames pat
-    bind -> nyi "HsBindLR" bind
-
-instance BoundNames (Pat Name) where
-  boundNames = \ case
-    ParPat p -> boundNames p
-    ConPatIn _ p -> boundNames p
-    VarPat p -> [p]
-    TuplePat pats _ _ -> boundNames pats
+instance NameGraph (Pat Name) where
+  nameGraph = \ case
+    ParPat p -> nameGraph p
+    ConPatIn _ p -> nameGraph p
+    VarPat p -> withoutUsedNames [p]
+    TuplePat pats _ _ -> nameGraph pats
     WildPat _ -> []
     pat -> nyi "Pat" pat
 
-instance BoundNames (HsConPatDetails Name) where
-  boundNames = \ case
-    PrefixCon args -> boundNames args
-    InfixCon a b -> boundNames [a, b]
+instance NameGraph (TyClGroup Name) where
+  nameGraph = \ case
+    TyClGroup decls [] -> nameGraph decls
+    x -> o x
+
+instance NameGraph (TyClDecl Name) where
+  nameGraph = \ case
+    DataDecl _typeCon _ def _ -> nameGraph def
+    ClassDecl{} -> []
+    SynDecl{} -> []
+    x -> o x
+
+instance NameGraph (HsDataDefn Name) where
+  nameGraph = \ case
+    (HsDataDefn _ _ _ _ constructors _) -> nameGraph constructors
+
+instance NameGraph (ConDecl Name) where
+  nameGraph = \ case
+    ConDecl names _ _ _ details _ _ _ ->
+      withoutUsedNames (map unLoc names) ++
+      nameGraph details
+
+instance NameGraph (HsConDetails (LBangType Name) (Located [LConDeclField Name])) where
+  nameGraph = \ case
+    RecCon rec -> nameGraph rec
+    PrefixCon _ -> []
+    x -> e x
+
+instance NameGraph (ConDeclField Name) where
+  nameGraph = \ case
+    ConDeclField names _typ _docs ->
+      withoutUsedNames $ map unLoc names
+
+instance NameGraph (HsConPatDetails Name) where
+  nameGraph = \ case
+    PrefixCon args -> nameGraph args
+    InfixCon a b -> nameGraph a ++ nameGraph b
     _ -> error "Not yet implemented: HsConPatDetails"
-
-instance BoundNames (TyClGroup Name) where
-  boundNames g = boundNames (universeBi g :: [ConDecl Name])
-
-instance BoundNames (ConDecl Name) where
-  boundNames conDecl =
-    filter (not . isHidden) $
-    concatMap (map unLoc . cd_fld_names) (universeBi conDecl :: [ConDeclField Name])
-    where
-      isHidden :: Name -> Bool
-      isHidden name = "_" `isPrefixOf` occNameString (getOccName name)
 
 -- | extracts names used in instance declarations
 getClassMethodUsedNames :: Ast -> [Name]
@@ -201,13 +214,11 @@ getClassMethodUsedNames ast =
   concatMap fromClassDecl (universeBi ast)
   where
     fromInstanceDecl :: InstDecl Name -> [Name]
-    fromInstanceDecl = concatMap usedNamesBind . universeBi
+    fromInstanceDecl decl =
+      usedNames (universeBi decl :: [HsBindLR Name Name])
 
     fromClassDecl :: TyClDecl Name -> [Name]
     fromClassDecl = \ case
       ClassDecl{tcdMeths} ->
-        concatMap usedNamesBind $ map unLoc $ bagToList tcdMeths
+        usedNames $ map unLoc $ bagToList tcdMeths
       _ -> []
-
-    usedNamesBind :: HsBindLR Name Name -> [Name]
-    usedNamesBind bind = usedNames bind

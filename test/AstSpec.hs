@@ -86,6 +86,13 @@ spec = do
         exports <- find ["Foo.hs"] [mkModuleName "Foo"]
         exports `shouldMatchList` ["Foo.foo", "Foo.bar"]
 
+    it "does not include local variables" $ do
+      withFooHeader [i|
+        foo = let bar = () in bar
+      |] $ do
+        exports <- find ["Foo.hs"] [mkModuleName "Foo"]
+        exports `shouldMatchList` ["Foo.foo"]
+
     context "when given a module with an export list" $ do
       it "returns the explicit exports" $ do
         let a = ("A", [i|
@@ -143,21 +150,14 @@ spec = do
           data A = A
         |] $ do
           parseStringGraph ["Foo.hs"] `shouldReturn`
-            Graph [] []
+            Graph [("Foo.A", [])] []
 
       it "ignores selectors" $ do
         withFooHeader [i|
           data A = A { foo :: () }
         |] $ do
           boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
-          boundNames `shouldBe` []
-
-      it "does not detect selectors starting with _" $ do
-        withFooHeader [i|
-          data A = A { _foo :: () }
-        |] $ do
-          boundNames <- map fst <$> usageGraph <$> parseStringGraph ["Foo.hs"]
-          boundNames `shouldNotContain` ["Foo._foo"]
+          boundNames `shouldBe` ["Foo.A", "Foo.foo"]
 
     it "doesn't return bound names for instance methods" $ do
       withFooHeader [i|

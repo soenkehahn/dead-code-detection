@@ -136,14 +136,14 @@ instance UsedNames arg => UsedNames (HsRecField Name arg) where
     unLoc assigned : usedNames expr
 
 e :: (Data a) => a -> b
-e x = error $ unlines $
+e x = error $ ("e: " ++ ) $ unlines $
   dataTypeName (dataTypeOf x) :
   show (toConstr x) :
   []
 
 o :: (Outputable a, Data a) => a -> b
-o x = error $ unlines $
+o x = error $ ("o: " ++) $ unlines $
   dataTypeName (dataTypeOf x) :
   show (toConstr x) :
-  show (showSDocUnsafe (ppr x)) :
+  showSDocUnsafe (ppr x) :
   []
