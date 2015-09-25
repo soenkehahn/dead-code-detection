@@ -92,6 +92,15 @@ spec = do
           dead <- deadNamesFromFiles ["A.hs"] [mkModuleName "A"] True
           dead `shouldMatchList` ["A.hs:3:1: _bar"]
 
+    it "excludes constructor names" $ do
+        let a = ("A", [i|
+              module A () where
+              data A = A
+            |])
+        withModules [a] $ do
+          dead <- deadNamesFromFiles ["A.hs"] [mkModuleName "A"] True
+          dead `shouldMatchList` []
+
     it "only considers exported top-level declarations as roots" $ do
       let a = ("A", [i|
             module A (foo) where

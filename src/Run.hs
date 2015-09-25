@@ -5,6 +5,7 @@ module Run where
 
 import           Control.Exception
 import           Control.Monad
+import           Data.Char
 import           Data.Version
 import           Development.GitRev
 import           FastString
@@ -74,15 +75,24 @@ deadNamesFromFiles files roots includeUnderscoreNames = do
       Right rootExports -> do
         let graph = usedTopLevelNames ast
         return $ fmap formatName $
+          removeConstructorNames $
           filterUnderScoreNames includeUnderscoreNames $
           deadNames graph rootExports
 
 filterUnderScoreNames :: Bool -> [Name] -> [Name]
 filterUnderScoreNames include = if include then id else
-  filter (not . startsWith '_')
+  filter (not . startsWith (== '_'))
 
-startsWith :: Char -> Name -> Bool
-startsWith char name =
+startsWith :: (Char -> Bool) -> Name -> Bool
+startsWith p name =
   case unpackFS $ occNameFS $ occName name of
-    (a : _) -> a == char
+    (a : _) -> p a
     [] -> False
+
+removeConstructorNames :: [Name] -> [Name]
+removeConstructorNames = filter (not . isConstructorName)
+
+isConstructorName :: Name -> Bool
+isConstructorName name =
+  startsWith isUpper name ||
+  startsWith (== ':') name
