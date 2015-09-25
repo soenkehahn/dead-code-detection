@@ -68,8 +68,29 @@ spec = do
             bar = ()
           |])
       withModules [a, b] $ do
-        deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"]
+        deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"] False
           `shouldReturn` ["B.hs:2:1: bar"]
+
+    context "names starting with an underscore" $ do
+      it "excludes them by default" $ do
+        let a = ("A", [i|
+              module A (foo) where
+              foo = ()
+              _bar = ()
+            |])
+        withModules [a] $ do
+          dead <- deadNamesFromFiles ["A.hs"] [mkModuleName "A"] False
+          dead `shouldMatchList` []
+
+      it "includes them if asked to" $ do
+        let a = ("A", [i|
+              module A (foo) where
+              foo = ()
+              _bar = ()
+            |])
+        withModules [a] $ do
+          dead <- deadNamesFromFiles ["A.hs"] [mkModuleName "A"] True
+          dead `shouldMatchList` ["A.hs:3:1: _bar"]
 
     it "only considers exported top-level declarations as roots" $ do
       let a = ("A", [i|
@@ -83,5 +104,5 @@ spec = do
             baz = ()
           |])
       withModules [a, b] $ do
-        dead <- deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"]
+        dead <- deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"] False
         dead `shouldMatchList` ["A.hs:4:1: bar", "B.hs:2:1: baz"]

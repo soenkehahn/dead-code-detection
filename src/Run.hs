@@ -7,8 +7,10 @@ import           Control.Exception
 import           Control.Monad
 import           Data.Version
 import           Development.GitRev
+import           FastString
 import           GHC
 import qualified GHC.Generics
+import           OccName
 import           System.Console.GetOpt.Generics
 import           System.Exit
 
@@ -22,7 +24,8 @@ data Options
   = Options {
     sourceDirs :: [FilePath],
     root :: [String],
-    version :: Bool
+    version :: Bool,
+    includeUnderscoreNames :: Bool
   }
   deriving (Show, Eq, GHC.Generics.Generic)
 
@@ -33,15 +36,17 @@ run :: IO ()
 run = do
   options <- modifiedGetArguments $
     AddShortOption "sourceDirs" 'i' :
-  --  UseForPositionalArguments "root" "ROOT" :
     []
-  when (options == Options [] [] False) $
-    die "missing option: --root=STRING"
   when (version options) $ do
     putStrLn versionOutput
     throwIO ExitSuccess
+  when (null $ root options) $
+    die "missing option: --root=STRING"
   files <- findHaskellFiles (sourceDirs options)
-  deadNames <- deadNamesFromFiles files (map mkModuleName (root options))
+  deadNames <- deadNamesFromFiles
+    files
+    (map mkModuleName (root options))
+    (includeUnderscoreNames options)
   case deadNames of
     [] -> return ()
     _ -> do
@@ -59,8 +64,8 @@ versionOutput =
            "branch: " ++ $(gitBranch)
       else "version: " ++ showVersion Paths.version
 
-deadNamesFromFiles :: [FilePath] -> [ModuleName] -> IO [String]
-deadNamesFromFiles files roots = do
+deadNamesFromFiles :: [FilePath] -> [ModuleName] -> Bool -> IO [String]
+deadNamesFromFiles files roots includeUnderscoreNames = do
   ast <- parse files
   case ast of
     Left err -> die err
@@ -68,4 +73,16 @@ deadNamesFromFiles files roots = do
       Left err -> die err
       Right rootExports -> do
         let graph = usedTopLevelNames ast
-        return $ fmap formatName $ deadNames graph rootExports
+        return $ fmap formatName $
+          filterUnderScoreNames includeUnderscoreNames $
+          deadNames graph rootExports
+
+filterUnderScoreNames :: Bool -> [Name] -> [Name]
+filterUnderScoreNames include = if include then id else
+  filter (not . startsWith '_')
+
+startsWith :: Char -> Name -> Bool
+startsWith char name =
+  case unpackFS $ occNameFS $ occName name of
+    (a : _) -> a == char
+    [] -> False
