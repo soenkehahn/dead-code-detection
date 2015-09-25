@@ -27,7 +27,7 @@ instance UsedNames (HsBindLR Name Name) where
     FunBind _ _ matches _ _ _ -> usedNames matches
     PatBind lhs rhs _ _ _ ->
       usedNames lhs ++ usedNames rhs
-    x -> e x
+    x -> o x
 
 instance UsedNames (MatchGroup Name (LHsExpr Name)) where
   usedNames = usedNames . mg_alts
@@ -49,6 +49,8 @@ instance UsedNames (Pat Name) where
     AsPat _as pat -> usedNames pat
     ListPat pats _ _ -> usedNames pats
     SigPatIn pat _sig -> usedNames pat
+    BangPat pat -> usedNames pat
+    NPat{} -> []
     x -> o x
 
 instance UsedNames (HsConDetails (LPat Name) (HsRecFields Name (LPat Name))) where
@@ -103,18 +105,36 @@ instance UsedNames (HsExpr Name) where
     HsIf _ c t e ->
       usedNames c ++ usedNames t ++ usedNames e
     ExprWithTySig expr _ _ -> usedNames expr
-    x -> e x
+    NegApp expr _ -> usedNames expr
+    ArithSeq _ _ info -> usedNames info
+    RecordCon constructor _ binds ->
+      unLoc constructor : usedNames binds
+    x -> o x
+
+instance UsedNames (ArithSeqInfo Name) where
+  usedNames = \ case
+    From f -> usedNames f
+    FromThen f t -> usedNames f ++ usedNames t
+    FromTo f t -> usedNames f ++ usedNames t
+    FromThenTo f t to
+      -> usedNames f ++ usedNames t ++ usedNames to
 
 instance UsedNames (HsStmtContext Name) where
   usedNames = \ case
+    ListComp -> []
+    MonadComp -> []
+    PArrComp -> []
     DoExpr -> []
+    MDoExpr -> []
+    ArrowExpr -> []
+    GhciStmtCtxt -> []
     x -> e x
 
 instance UsedNames (HsLocalBinds Name) where
   usedNames = \ case
     EmptyLocalBinds -> []
     HsValBinds binds -> usedNames binds
-    x -> e x
+    x -> o x
 
 instance UsedNames (HsValBindsLR Name Name) where
   usedNames = \ case
