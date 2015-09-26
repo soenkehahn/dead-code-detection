@@ -51,6 +51,7 @@ instance UsedNames (Pat Name) where
     SigPatIn pat _sig -> usedNames pat
     BangPat pat -> usedNames pat
     NPat{} -> []
+    LitPat{} -> []
     x -> o x
 
 instance UsedNames (HsConDetails (LPat Name) (HsRecFields Name (LPat Name))) where
