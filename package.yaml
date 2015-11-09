@@ -15,7 +15,7 @@ ghc-options: -Wall -fno-warn-name-shadowing
 dependencies:
   - base == 4.*
   - silently
-  - getopt-generics
+  - getopt-generics == 0.12.*
   - ghc
   - Glob
   - string-conversions

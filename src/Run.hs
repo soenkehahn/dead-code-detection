@@ -10,10 +10,9 @@ import           Data.Version
 import           Development.GitRev
 import           FastString
 import           GHC
-import qualified GHC.Generics
 import           OccName
-import           System.Console.GetOpt.Generics
 import           System.Exit
+import           WithCli
 
 import           Ast
 import           Files
@@ -28,31 +27,29 @@ data Options
     version :: Bool,
     includeUnderscoreNames :: Bool
   }
-  deriving (Show, Eq, GHC.Generics.Generic)
+  deriving (Show, Eq, Generic)
 
-instance Generic Options
-instance HasDatatypeInfo Options
+instance HasArguments Options
 
 run :: IO ()
 run = do
-  options <- modifiedGetArguments $
-    AddShortOption "sourceDirs" 'i' :
-    []
-  when (version options) $ do
-    putStrLn versionOutput
-    throwIO ExitSuccess
-  when (null $ root options) $
-    die "missing option: --root=STRING"
-  files <- findHaskellFiles (sourceDirs options)
-  deadNames <- deadNamesFromFiles
-    files
-    (map mkModuleName (root options))
-    (includeUnderscoreNames options)
-  case deadNames of
-    [] -> return ()
-    _ -> do
-      forM_ deadNames putStrLn
-      exitWith $ ExitFailure 1
+  let mods = [AddShortOption "sourceDirs" 'i']
+  withCliModified mods $ \ options -> do
+    when (version options) $ do
+      putStrLn versionOutput
+      throwIO ExitSuccess
+    when (null $ root options) $
+      die "missing option: --root=STRING"
+    files <- findHaskellFiles (sourceDirs options)
+    deadNames <- deadNamesFromFiles
+      files
+      (map mkModuleName (root options))
+      (includeUnderscoreNames options)
+    case deadNames of
+      [] -> return ()
+      _ -> do
+        forM_ deadNames putStrLn
+        exitWith $ ExitFailure 1
 
 versionOutput :: String
 versionOutput =

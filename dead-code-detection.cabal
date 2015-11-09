@@ -31,7 +31,7 @@ executable dead-code-detection
   build-depends:
       base == 4.*
     , silently
-    , getopt-generics
+    , getopt-generics == 0.12.*
     , ghc
     , Glob
     , string-conversions
@@ -60,7 +60,7 @@ test-suite spec
   build-depends:
       base == 4.*
     , silently
-    , getopt-generics
+    , getopt-generics == 0.12.*
     , ghc
     , Glob
     , string-conversions
