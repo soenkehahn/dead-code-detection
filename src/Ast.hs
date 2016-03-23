@@ -137,7 +137,7 @@ instance NameGraph Module where
 
 instance NameGraph (HsGroup Name) where
   nameGraph = \ case
-    HsGroup valBinds [] tyclds _instances [] [] [] foreign_decls [] [] [] [] [] ->
+    HsGroup valBinds [] tyclds _instances _standaloneInstances [] [] foreign_decls [] [] [] [] [] ->
       nameGraph valBinds ++
       nameGraph tyclds ++
       nameGraph foreign_decls

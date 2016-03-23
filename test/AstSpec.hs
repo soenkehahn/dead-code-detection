@@ -166,6 +166,15 @@ spec = do
       |] $ do
         (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` []
 
+    it "ignores standalone deriving instances" $ do
+      withFoo [i|
+        {-# LANGUAGE StandaloneDeriving #-}
+        module Foo where
+        data Foo = Foo
+        deriving instance Show Foo
+      |] $ do
+        (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` [("Foo.Foo", [])]
+
     context "PatBind" $ do
       it "can parse pattern binding" $ do
         withFooHeader [i|
