@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.5.4.
+-- This file has been generated from package.yaml by hpack version 0.10.0.
 --
 -- see: https://github.com/sol/hpack
 
@@ -31,7 +31,7 @@ executable dead-code-detection
   build-depends:
       base == 4.*
     , silently
-    , getopt-generics == 0.12.*
+    , getopt-generics == 0.12.* || == 0.13.*
     , ghc
     , Glob
     , string-conversions
@@ -60,7 +60,7 @@ test-suite spec
   build-depends:
       base == 4.*
     , silently
-    , getopt-generics == 0.12.*
+    , getopt-generics == 0.12.* || == 0.13.*
     , ghc
     , Glob
     , string-conversions
