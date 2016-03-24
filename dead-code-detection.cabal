@@ -3,7 +3,7 @@
 -- see: https://github.com/sol/hpack
 
 name:           dead-code-detection
-version:        0.5
+version:        0.5.1
 synopsis:       detect dead code in haskell projects
 description:    detect dead code in haskell projects
 category:       Development
@@ -75,6 +75,7 @@ test-suite spec
     , filepath
     , directory
   other-modules:
+      Ast.UsedNamesSpec
       AstSpec
       FilesSpec
       GraphSpec
