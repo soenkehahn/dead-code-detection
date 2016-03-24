@@ -27,7 +27,6 @@ import           System.IO
 import           System.IO.Silently
 
 import           Ast.UsedNames
-import           GHC.Show
 import           Graph
 
 type Ast = [Module]
@@ -141,12 +140,12 @@ instance NameGraph (HsGroup Name) where
       nameGraph valBinds ++
       nameGraph tyclds ++
       nameGraph foreign_decls
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance NameGraph (ForeignDecl Name) where
   nameGraph = \ case
     ForeignImport name _ _ _ -> [(unLoc name, [])]
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance NameGraph (HsValBinds Name) where
   nameGraph = \ case
@@ -157,7 +156,7 @@ instance NameGraph (HsBindLR Name Name) where
   nameGraph bind = addUsedNames (usedNames bind) $ case bind of
     FunBind id _ _ _ _ _ -> withoutUsedNames [unLoc id]
     PatBind pat _ _ _ _ -> nameGraph pat
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance NameGraph (Pat Name) where
   nameGraph = \ case
@@ -166,19 +165,19 @@ instance NameGraph (Pat Name) where
     VarPat p -> withoutUsedNames [p]
     TuplePat pats _ _ -> nameGraph pats
     WildPat _ -> []
-    pat -> nyi "Pat" pat
+    pat -> errorNyiOutputable pat
 
 instance NameGraph (TyClGroup Name) where
   nameGraph = \ case
     TyClGroup decls [] -> nameGraph decls
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance NameGraph (TyClDecl Name) where
   nameGraph = \ case
     DataDecl _typeCon _ def _ -> nameGraph def
     ClassDecl{} -> []
     SynDecl{} -> []
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance NameGraph (HsDataDefn Name) where
   nameGraph = \ case
@@ -194,7 +193,7 @@ instance NameGraph (HsConDetails (LBangType Name) (Located [LConDeclField Name])
   nameGraph = \ case
     RecCon rec -> nameGraph rec
     PrefixCon _ -> []
-    x -> e x
+    x -> errorNyiData x
 
 instance NameGraph (ConDeclField Name) where
   nameGraph = \ case
@@ -205,7 +204,7 @@ instance NameGraph (HsConPatDetails Name) where
   nameGraph = \ case
     PrefixCon args -> nameGraph args
     InfixCon a b -> nameGraph a ++ nameGraph b
-    _ -> error "Not yet implemented: HsConPatDetails"
+    x -> errorNyiData x
 
 -- | extracts names used in instance declarations
 getClassMethodUsedNames :: Ast -> [Name]

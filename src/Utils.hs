@@ -12,3 +12,13 @@ nubOrd = inner empty
       | a `member` acc = inner acc r
       | otherwise = a : inner (insert a acc) r
     inner _ [] = []
+
+errorNyi :: String -> a
+errorNyi message = error $ unlines $
+  "Encountered a language construct that is" :
+  "not yet implemented. Please consider opening a bug report about" :
+  "this here: https://github.com/soenkehahn/dead-code-detection/issues" :
+  "" :
+  "Here's some debugging output that will probably help to solve this problem:" :
+  message :
+  []

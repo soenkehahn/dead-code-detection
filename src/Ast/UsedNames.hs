@@ -8,6 +8,7 @@ import           Bag
 import           Data.Data
 import           GHC
 import           Outputable
+import           Utils
 
 class UsedNames ast where
   -- | extracts all used names from ASTs
@@ -27,7 +28,7 @@ instance UsedNames (HsBindLR Name Name) where
     FunBind _ _ matches _ _ _ -> usedNames matches
     PatBind lhs rhs _ _ _ ->
       usedNames lhs ++ usedNames rhs
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (MatchGroup Name (LHsExpr Name)) where
   usedNames = usedNames . mg_alts
@@ -52,7 +53,7 @@ instance UsedNames (Pat Name) where
     BangPat pat -> usedNames pat
     NPat{} -> []
     LitPat{} -> []
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (HsConDetails (LPat Name) (HsRecFields Name (LPat Name))) where
   usedNames = \ case
@@ -76,7 +77,7 @@ instance UsedNames (StmtLR Name Name (LHsExpr Name)) where
     LastStmt expr _ -> usedNames expr
     BodyStmt expr _ _ _ -> usedNames expr
     LetStmt x -> usedNames x
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (HsExpr Name) where
   usedNames = \ case
@@ -110,7 +111,7 @@ instance UsedNames (HsExpr Name) where
     ArithSeq _ _ info -> usedNames info
     RecordCon constructor _ binds ->
       unLoc constructor : usedNames binds
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (ArithSeqInfo Name) where
   usedNames = \ case
@@ -129,19 +130,19 @@ instance UsedNames (HsStmtContext Name) where
     MDoExpr -> []
     ArrowExpr -> []
     GhciStmtCtxt -> []
-    x -> e x
+    x -> errorNyiData x
 
 instance UsedNames (HsLocalBinds Name) where
   usedNames = \ case
     EmptyLocalBinds -> []
     HsValBinds binds -> usedNames binds
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (HsValBindsLR Name Name) where
   usedNames = \ case
     ValBindsOut (map snd -> binds) _sig ->
       usedNames binds
-    x -> o x
+    x -> errorNyiOutputable x
 
 instance UsedNames (HsTupArg Name) where
   usedNames = \ case
@@ -156,14 +157,14 @@ instance UsedNames arg => UsedNames (HsRecField Name arg) where
   usedNames (HsRecField assigned expr _) =
     unLoc assigned : usedNames expr
 
-e :: (Data a) => a -> b
-e x = error $ ("e: " ++ ) $ unlines $
+errorNyiData :: (Data a) => a -> b
+errorNyiData x = errorNyi $ ("errorNyiData: " ++ ) $ unlines $
   dataTypeName (dataTypeOf x) :
   show (toConstr x) :
   []
 
-o :: (Outputable a, Data a) => a -> b
-o x = error $ ("o: " ++) $ unlines $
+errorNyiOutputable :: (Outputable a, Data a) => a -> b
+errorNyiOutputable x = errorNyi $ ("errorNyiOutputable: " ++) $ unlines $
   dataTypeName (dataTypeOf x) :
   show (toConstr x) :
   showSDocUnsafe (ppr x) :

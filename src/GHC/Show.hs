@@ -18,9 +18,3 @@ formatName name =
         show (srcLocLine loc) ++ ":" ++
         show (srcLocCol loc)
       UnhelpfulLoc s -> cs (fs_bs s)
-
--- * development utils
-
-nyi :: Outputable doc => String -> doc -> a
-nyi msg x = error $
-  ("Not yet implemented: " ++ msg ++ " " ++ (showSDocUnsafe $ ppr x))
