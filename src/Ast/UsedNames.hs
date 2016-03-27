@@ -53,6 +53,7 @@ instance UsedNames (Pat Name) where
     BangPat pat -> usedNames pat
     NPat{} -> []
     LitPat{} -> []
+    LazyPat pat -> usedNames pat
     x -> errorNyiOutputable x
 
 instance UsedNames (HsConDetails (LPat Name) (HsRecFields Name (LPat Name))) where

@@ -176,6 +176,7 @@ instance NameGraph (Pat Name) where
     VarPat p -> withoutUsedNames [p]
     TuplePat pats _ _ -> nameGraph pats
     WildPat _ -> []
+    LazyPat p -> nameGraph p
     pat -> errorNyiOutputable pat
 
 instance NameGraph (TyClGroup Name) where

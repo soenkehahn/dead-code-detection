@@ -195,6 +195,13 @@ spec = do
           parseStringGraph ["Foo.hs"] `shouldReturn`
             Graph [("Foo.a", []), ("Foo.b", [])] []
 
+      it "can parse lazy patterns" $ do
+        withFooHeader [i|
+          ~(a, b) = let x = x in x
+        |] $ do
+          parseStringGraph ["Foo.hs"] `shouldReturn`
+            Graph [("Foo.a", []), ("Foo.b", [])] []
+
     context "local variables" $ do
       it "recognizes recursive definitions" $ do
         withFooHeader [i|
