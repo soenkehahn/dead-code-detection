@@ -180,6 +180,13 @@ spec = do
       |] $ do
         (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` [("Foo.Foo", [])]
 
+    it "ignores annotations" $ do
+      withFooHeader [i|
+        {-# ANN foo "annotation" #-}
+        foo = 42
+      |] $ do
+        (usageGraph <$> parseStringGraph ["Foo.hs"]) `shouldReturn` [("Foo.foo",[])]
+
     context "PatBind" $ do
       it "can parse pattern binding" $ do
         withFooHeader [i|
