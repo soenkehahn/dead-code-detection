@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NamedFieldPuns #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -15,12 +16,14 @@ module Ast (
 
 import           Bag
 import           Control.Arrow ((>>>), second)
+import           Control.Exception
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
+import           HscTypes
 import           Name
 import           Outputable
 import           System.IO
@@ -80,9 +83,17 @@ parse files =
         return $ Just $ map toModule typecheckedModules
 
 errorHandler :: IO (Maybe a) -> IO (Either String a)
-errorHandler action = do
-  (errs, a) <- hCapture [stderr] action
-  return $ maybe (Left errs) Right a
+errorHandler action =
+  catchSourceError $
+  captureStderr action
+  where
+    captureStderr action = do
+      (errs, a) <- hCapture [stderr] action
+      return $ maybe (Left errs) Right a
+
+    catchSourceError :: IO (Either String a) -> IO (Either String a)
+    catchSourceError = handle $ \ (e :: SourceError) ->
+      return $ Left $ show e
 
 findExports :: Ast -> [ModuleName] -> Either String [Name]
 findExports ast names = concat <$> mapM inner names

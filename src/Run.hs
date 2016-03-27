@@ -19,6 +19,7 @@ import           Files
 import           GHC.Show
 import           Graph
 import qualified Paths_dead_code_detection as Paths
+import           Utils
 
 data Options
   = Options {
@@ -66,7 +67,7 @@ deadNamesFromFiles :: [FilePath] -> [ModuleName] -> Bool -> IO [String]
 deadNamesFromFiles files roots includeUnderscoreNames = do
   ast <- parse files
   case ast of
-    Left err -> die err
+    Left err -> die $ ghcError err
     Right ast -> case findExports ast roots of
       Left err -> die err
       Right rootExports -> do
@@ -75,6 +76,12 @@ deadNamesFromFiles files roots includeUnderscoreNames = do
           removeConstructorNames $
           filterUnderScoreNames includeUnderscoreNames $
           deadNames graph rootExports
+  where
+    ghcError message = stripSpaces $ unlines $
+      "Some of the input files produce compile errors." :
+      "ghc says:" :
+      map ("   " ++) (lines message) ++
+      []
 
 filterUnderScoreNames :: Bool -> [Name] -> [Name]
 filterUnderScoreNames include = if include then id else

@@ -58,6 +58,17 @@ spec = do
       output `shouldContain` "version: "
 
   describe "deadNamesFromFiles" $ do
+    it "should clearly mark ghc's output as such" $ do
+      let a = ("A", [i|
+            module A where
+            import B
+          |])
+      withModules [a] $ do
+        output <- hCapture_ [stderr] $
+          deadNamesFromFiles ["A.hs"] [mkModuleName "A"] False
+            `shouldThrow` (== ExitFailure 1)
+        output `shouldContain` "ghc says:"
+
     it "can be run on multiple modules" $ do
       let a = ("A", [i|
             module A where

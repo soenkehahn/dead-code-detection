@@ -31,6 +31,11 @@ spec = do
         result <- parse ["Foo.hs"]
         void result `shouldBe` Left "\nFoo.hs:2:7: Not in scope: ‘bar’\n"
 
+    it "handles missing modules gracefully" $ do
+      withFooHeader "import Bar" $ do
+        Left message <- parse ["Foo.hs"]
+        message `shouldContain` "Could not find module ‘Bar’"
+
     it "doesn't output error messages" $ do
       withFoo "foo = bar" $ do
         output <- hCapture_ [stdout, stderr] $ parse ["Foo.hs"]
