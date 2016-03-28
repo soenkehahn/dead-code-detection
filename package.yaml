@@ -1,4 +1,4 @@
-version: "0.5.1"
+version: "0.6"
 synopsis: detect dead code in haskell projects
 description: detect dead code in haskell projects
 category: Development
