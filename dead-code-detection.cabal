@@ -52,7 +52,7 @@ executable dead-code-detection
 
 test-suite spec
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   hs-source-dirs:
       test
     , src
@@ -81,6 +81,7 @@ test-suite spec
       GraphSpec
       Helper
       RunSpec
+      Spec
       Ast
       Ast.UsedNames
       Files
