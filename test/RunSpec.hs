@@ -57,6 +57,18 @@ spec = do
         withArgs ["--version"] run
       output `shouldContain` "version: "
 
+    it "ignores files if told to do so" $ do
+      let main = ("Main", [i|
+            module Main where
+            main = return ()
+          |])
+          b = ("B", [i|
+            module B where
+            unused = ()
+            |])
+          run' = withArgs (words "-i. -e./B.hs --root Main") run
+      withModules [main, b] $ run' `shouldReturn` ()
+
   describe "deadNamesFromFiles" $ do
     it "should clearly mark ghc's output as such" $ do
       let a = ("A", [i|
