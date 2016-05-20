@@ -63,8 +63,7 @@ spec = do
             main = return ()
           |])
           b = ("B", [i|
-            module B where
-            unused = ()
+            This is some arbitrary text that is not Haskell.
             |])
           run' = withArgs (words "-i. -e./B.hs --root Main") run
       withModules [main, b] $ run' `shouldReturn` ()
