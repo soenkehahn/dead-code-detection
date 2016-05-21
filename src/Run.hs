@@ -24,6 +24,7 @@ import           Utils
 data Options
   = Options {
     sourceDirs :: [FilePath],
+    ignore :: [FilePath],
     root :: [String],
     version :: Bool,
     includeUnderscoreNames :: Bool
@@ -34,14 +35,16 @@ instance HasArguments Options
 
 run :: IO ()
 run = do
-  let mods = [AddShortOption "sourceDirs" 'i']
+  let mods = [AddShortOption "sourceDirs" 'i',
+              AddShortOption "ignore" 'e']
   withCliModified mods $ \ options -> do
     when (version options) $ do
       putStrLn versionOutput
       throwIO ExitSuccess
     when (null $ root options) $
       die "missing option: --root=STRING"
-    files <- findHaskellFiles (sourceDirs options)
+    files <- filter (`notElem` ignore options) <$>
+      findHaskellFiles (sourceDirs options)
     deadNames <- deadNamesFromFiles
       files
       (map mkModuleName (root options))
