@@ -1,9 +1,9 @@
--- This file has been generated from package.yaml by hpack version 0.10.0.
+-- This file has been generated from package.yaml by hpack version 0.13.0.
 --
 -- see: https://github.com/sol/hpack
 
 name:           dead-code-detection
-version:        0.6
+version:        0.7
 synopsis:       detect dead code in haskell projects
 description:    detect dead code in haskell projects
 category:       Development
