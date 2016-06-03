@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module RunSpec where
 
@@ -32,7 +33,7 @@ spec = do
 
       it "exits with a non-zero exit-code" $ do
         withModules [main] $ do
-          run' `shouldThrow` (== ExitFailure 1)
+          run' `shouldDie` ""
 
     it "allows to set multiple roots" $ do
       let a = ("A", [i|
@@ -57,16 +58,37 @@ spec = do
         withArgs ["--version"] run
       output `shouldContain` "version: "
 
-    it "ignores files if told to do so" $ do
-      let main = ("Main", [i|
-            module Main where
-            main = return ()
-          |])
-          b = ("B", [i|
-            This is some arbitrary text that is not Haskell.
+    context "--ignore" $ do
+
+      it "ignores files if told to do so" $ do
+        let main = ("Main", [i|
+              module Main where
+              main = return ()
             |])
-          run' = withArgs (words "-i. -e./B.hs --root Main") run
-      withModules [main, b] $ run' `shouldReturn` ()
+            b = ("B", [i|
+              This is some arbitrary text that is not Haskell.
+              |])
+            run' = withArgs (words "-i. -e./B.hs --root Main") run
+        withModules [main, b] $ run' `shouldReturn` ()
+
+      it "errors out on missing ignored files" $ do
+        let main = ("Main", [i|
+              module Main where
+              main = return ()
+            |])
+            run' = withArgs (words "-i. -e./B.hs --root Main") run
+        withModules [main] $ run' `shouldDie` "file not found: ./B.hs\n"
+
+      it "ignores files if referenced differently" $ do
+        let main = ("Main", [i|
+              module Main where
+              main = return ()
+            |])
+            b = ("B", [i|
+              This is some arbitrary text that is not Haskell.
+              |])
+            run' = withArgs (words "-i. -e B.hs --root Main") run
+        withModules [main, b] $ run' `shouldReturn` ()
 
   describe "deadNamesFromFiles" $ do
     it "should clearly mark ghc's output as such" $ do
@@ -137,3 +159,14 @@ spec = do
       withModules [a, b] $ do
         dead <- deadNamesFromFiles ["A.hs", "B.hs"] [mkModuleName "A"] False
         dead `shouldMatchList` ["A.hs:4:1: bar", "B.hs:2:1: baz"]
+
+shouldDie :: IO a -> String -> IO ()
+shouldDie action err = do
+  (output, exception) <- hCapture [stderr] $ catch
+    (action >> return Nothing)
+    (\ (e :: ExitCode) -> return $ Just e)
+  case exception of
+    Nothing -> throwIO $ ErrorCall "shouldDie: didn't receive ExitCode exception"
+    Just ExitSuccess -> throwIO $ ErrorCall "shouldDie: received ExitSuccess exception"
+    Just (ExitFailure _) ->
+      output `shouldBe` err

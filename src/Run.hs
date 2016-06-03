@@ -11,6 +11,7 @@ import           Development.GitRev
 import           FastString
 import           GHC
 import           OccName
+import           System.Directory
 import           System.Exit
 import           WithCli
 
@@ -43,8 +44,8 @@ run = do
       throwIO ExitSuccess
     when (null $ root options) $
       die "missing option: --root=STRING"
-    files <- filter (`notElem` ignore options) <$>
-      findHaskellFiles (sourceDirs options)
+    files <- findHaskellFiles (sourceDirs options)
+      >>= filterNotIgnored (ignore options)
     deadNames <- deadNamesFromFiles
       files
       (map mkModuleName (root options))
@@ -65,6 +66,30 @@ versionOutput =
            "rev: " ++ $(gitHash) ++ (if $(gitDirty) then " (dirty)" else "") ++ "\n" ++
            "branch: " ++ $(gitBranch)
       else "version: " ++ showVersion Paths.version
+
+filterNotIgnored :: [FilePath] -> [FilePath] -> IO [FilePath]
+filterNotIgnored ignored files = do
+  ignoredCanonicalized <- mapM safeCanonicalize ignored
+  forFilterM files $ \ file -> do
+    canonicalized <- safeCanonicalize file
+    return $ not (canonicalized `elem` ignoredCanonicalized)
+
+safeCanonicalize :: FilePath -> IO FilePath
+safeCanonicalize file = do
+  exists <- doesFileExist file
+  when (not exists) $ do
+    die ("file not found: " ++ file)
+  canonicalizePath file
+
+forFilterM :: Monad m => [a] -> (a -> m Bool) -> m [a]
+forFilterM list pred = case list of
+  (a : r) -> do
+    cond <- pred a
+    rest <- forFilterM r pred
+    if cond
+      then return (a : rest)
+      else return rest
+  [] -> return []
 
 deadNamesFromFiles :: [FilePath] -> [ModuleName] -> Bool -> IO [String]
 deadNamesFromFiles files roots includeUnderscoreNames = do

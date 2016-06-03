@@ -24,6 +24,7 @@ dependencies:
   - uniplate
   - ghc-paths
   - gitrev
+  - directory
 
 executables:
   dead-code-detection:
@@ -43,4 +44,3 @@ tests:
       - mockery
       - interpolate
       - filepath
-      - directory
