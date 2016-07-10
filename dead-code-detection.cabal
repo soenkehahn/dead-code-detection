@@ -27,7 +27,8 @@ executable dead-code-detection
   hs-source-dirs:
       src
     , driver
-  ghc-options: -Wall -fno-warn-name-shadowing
+  ghc-options: -Wall -fno-warn-name-shadowing -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+
   build-depends:
       base == 4.*
     , silently
@@ -57,7 +58,8 @@ test-suite spec
   hs-source-dirs:
       test
     , src
-  ghc-options: -Wall -fno-warn-name-shadowing
+  ghc-options: -Wall -fno-warn-name-shadowing -fwarn-incomplete-record-updates
+
   build-depends:
       base == 4.*
     , silently

@@ -10,8 +10,6 @@ github: soenkehahn/dead-code-detection
 extra-source-files:
   README.md
 
-ghc-options: -Wall -fno-warn-name-shadowing
-
 dependencies:
   - base == 4.*
   - silently
@@ -29,6 +27,11 @@ dependencies:
 executables:
   dead-code-detection:
     main: Main.hs
+    ghc-options: >
+      -Wall
+      -fno-warn-name-shadowing
+      -fwarn-incomplete-uni-patterns
+      -fwarn-incomplete-record-updates
     source-dirs:
       - src
       - driver
@@ -36,6 +39,10 @@ executables:
 tests:
   spec:
     main: Main.hs
+    ghc-options: >
+      -Wall
+      -fno-warn-name-shadowing
+      -fwarn-incomplete-record-updates
     source-dirs:
       - test
       - src
