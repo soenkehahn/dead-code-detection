@@ -19,6 +19,7 @@ import           Control.Arrow ((>>>), second)
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
+import           ErrUtils
 import           Exception
 import qualified GHC
 import           GHC hiding (Module, moduleName)
@@ -98,9 +99,17 @@ runGhcPureExceptions action =
       return $ either (\ outerErrs -> Left (outerErrs ++ lines errs)) Right a
 
     catchSourceError :: Ghc (Either [String] a) -> Ghc (Either [String] a)
-    catchSourceError action = ghandle
-      (\ (e :: SourceError) -> return $ Left $ [show e])
-      action
+    catchSourceError = ghandle $ \ (e :: SourceError) -> do
+      dynFlags <- getSessionDynFlags
+      return $ Left [formatSourceError dynFlags e]
+
+formatSourceError :: DynFlags -> SourceError -> String
+formatSourceError dynFlags sourceError =
+  unlines $
+  map (showSDoc dynFlags) $
+  pprErrMsgBagWithLoc $
+  srcErrorMessages $
+  sourceError
 
 findExports :: Ast -> [ModuleName] -> Either String [Name]
 findExports ast names = concat <$> mapM inner names

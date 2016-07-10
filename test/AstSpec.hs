@@ -31,6 +31,17 @@ spec = do
         result <- parse ["Foo.hs"]
         void result `shouldBe` Left "\nFoo.hs:2:7: Not in scope: ‘bar’\n"
 
+    context "preprocessor errors" $ do
+      it "gives Lefts, not Exceptions" $ do
+        withFoo "{-# LANGUAGE CPP #-}\n#invalid" $ do
+          Left err <- parse ["Foo.hs"]
+          err `shouldContain` "lexical error"
+
+      it "includes source locations" $ do
+        withFoo "{-# LANGUAGE CPP #-}\n#invalid" $ do
+          Left err <- parse ["Foo.hs"]
+          err `shouldContain` "Foo.hs:2:2:"
+
     it "handles missing modules gracefully" $ do
       withFooHeader "import Bar" $ do
         Left message <- parse ["Foo.hs"]
