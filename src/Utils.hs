@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Utils where
@@ -28,3 +29,8 @@ stripSpaces :: String -> String
 stripSpaces =
   reverse . dropWhile isSpace .
   reverse . dropWhile isSpace
+
+mapLeft :: (a -> b) -> Either a c -> Either b c
+mapLeft f = \ case
+  Left a -> Left $ f a
+  Right x -> Right x

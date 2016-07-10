@@ -16,10 +16,10 @@ module Ast (
 
 import           Bag
 import           Control.Arrow ((>>>), second)
-import           Control.Exception
 import           Control.Monad
 import           Data.Data
 import           Data.Generics.Uniplate.Data
+import           Exception
 import qualified GHC
 import           GHC hiding (Module, moduleName)
 import           GHC.Paths (libdir)
@@ -31,6 +31,7 @@ import           System.IO.Silently
 
 import           Ast.UsedNames
 import           Graph
+import           Utils
 
 type Ast = [Module]
 
@@ -60,8 +61,7 @@ toModule m = case tm_renamed_source m of
 
 parse :: [FilePath] -> IO (Either String Ast)
 parse files =
-  errorHandler $
-  runGhc (Just libdir) $ do
+  runGhcPureExceptions $ do
     dynFlags <- getSessionDynFlags
     void $ setSessionDynFlags $ dynFlags {
       hscTarget = HscNothing,
@@ -82,18 +82,25 @@ parse files =
           (parseModule mod >>= typecheckModule)
         return $ Just $ map toModule typecheckedModules
 
-errorHandler :: IO (Maybe a) -> IO (Either String a)
-errorHandler action =
+runGhcPureExceptions :: Ghc (Maybe a) -> IO (Either String a)
+runGhcPureExceptions action =
+  fmap (mapLeft (unlines . map stripSpaces)) $
+  captureStderr $
+  runGhc (Just libdir) $
   catchSourceError $
-  captureStderr action
+  fmap (maybe (Left []) Right) $
+  action
+
   where
+    captureStderr :: IO (Either [String] a) -> IO (Either [String] a)
     captureStderr action = do
       (errs, a) <- hCapture [stderr] action
-      return $ maybe (Left errs) Right a
+      return $ either (\ outerErrs -> Left (outerErrs ++ lines errs)) Right a
 
-    catchSourceError :: IO (Either String a) -> IO (Either String a)
-    catchSourceError = handle $ \ (e :: SourceError) ->
-      return $ Left $ show e
+    catchSourceError :: Ghc (Either [String] a) -> Ghc (Either [String] a)
+    catchSourceError action = ghandle
+      (\ (e :: SourceError) -> return $ Left $ [show e])
+      action
 
 findExports :: Ast -> [ModuleName] -> Either String [Name]
 findExports ast names = concat <$> mapM inner names
