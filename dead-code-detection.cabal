@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.14.0.
+-- This file has been generated from package.yaml by hpack version 0.14.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -27,12 +27,11 @@ executable dead-code-detection
   hs-source-dirs:
       src
     , driver
-  ghc-options: -Wall -fno-warn-name-shadowing -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
-
+  ghc-options: -Wall -fno-warn-name-shadowing -fwarn-incomplete-record-updates -fwarn-incomplete-uni-patterns
   build-depends:
-      base == 4.*
+      base ==4.*
     , silently
-    , getopt-generics == 0.12.* || == 0.13.*
+    , getopt-generics ==0.12.* || ==0.13.*
     , ghc
     , Glob
     , string-conversions
@@ -56,14 +55,13 @@ test-suite spec
   type: exitcode-stdio-1.0
   main-is: Main.hs
   hs-source-dirs:
-      test
-    , src
+      src
+    , test
   ghc-options: -Wall -fno-warn-name-shadowing -fwarn-incomplete-record-updates
-
   build-depends:
-      base == 4.*
+      base ==4.*
     , silently
-    , getopt-generics == 0.12.* || == 0.13.*
+    , getopt-generics ==0.12.* || ==0.13.*
     , ghc
     , Glob
     , string-conversions
@@ -78,13 +76,6 @@ test-suite spec
     , interpolate
     , filepath
   other-modules:
-      Ast.UsedNamesSpec
-      AstSpec
-      FilesSpec
-      GraphSpec
-      Helper
-      RunSpec
-      Spec
       Ast
       Ast.UsedNames
       Files
@@ -92,4 +83,11 @@ test-suite spec
       Graph
       Run
       Utils
+      Ast.UsedNamesSpec
+      AstSpec
+      FilesSpec
+      GraphSpec
+      Helper
+      RunSpec
+      Spec
   default-language: Haskell2010
